@@ -14,6 +14,9 @@ export type StructuredData = Record<StructuredField, string>;
 
 export type Provider = "openai" | "anthropic" | "gemini";
 
+export type ImageProvider = "openai";
+export type ImageSize = "1024x1024" | "1536x1536" | "2048x2048" | "2560x1440" | "3840x2160";
+
 export type ModelConfigRecord = {
   id: string;
   user_id: string;
@@ -84,4 +87,95 @@ export type ExtractionResponse = {
   finalPrompt: string | null;
   rawModelOutput?: string | null;
   errorMessage?: string | null;
+};
+
+export type ExtractionResultListItem = {
+  id: string;
+  prompt: string;
+  created_at: string;
+};
+
+export type ImageModelConfigRecord = {
+  id: string;
+  user_id: string;
+  name: string;
+  provider: ImageProvider;
+  model: string;
+  base_url: string | null;
+  api_key_encrypted: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImageModelConfigInput = {
+  name: string;
+  provider: ImageProvider;
+  model: string;
+  baseUrl?: string;
+  apiKey: string;
+  isDefault?: boolean;
+};
+
+export type ImageGenerationStatus = "processing" | "success" | "failed";
+
+export type ImageGenerationTaskRecord = {
+  id: string;
+  user_id: string;
+  extraction_job_id: string;
+  image_model_config_id: string | null;
+  image_size: ImageSize;
+  status: ImageGenerationStatus;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImageGenerationResultRecord = {
+  id: string;
+  task_id: string;
+  storage_path: string;
+  image_url: string;
+  provider_image_url: string | null;
+  model: string;
+  seed: string | null;
+  created_at: string;
+};
+
+export type ImageGenerationRequest = {
+  extractionResultId: string;
+  imageModelConfigId: string;
+  imageSize: ImageSize;
+};
+
+export type ImageGenerationResponse = {
+  taskId: string;
+  status: ImageGenerationStatus;
+  imageUrl: string | null;
+  sourcePrompt: string;
+  extractionJobId: string;
+  imageSize: ImageSize;
+  modelName: string;
+  errorMessage?: string | null;
+  seed?: string | null;
+};
+
+export type ImageHistoryItem = {
+  taskId: string;
+  extractionJobId: string;
+  prompt: string;
+  promptPreview: string;
+  imageSize: ImageSize;
+  status: ImageGenerationStatus;
+  createdAt: string;
+  modelName: string;
+  imageUrl: string | null;
+  errorMessage: string | null;
+};
+
+export type ImageHistoryDetail = {
+  task: ImageGenerationTaskRecord;
+  result: ImageGenerationResultRecord | null;
+  sourcePrompt: string;
+  modelName: string;
 };

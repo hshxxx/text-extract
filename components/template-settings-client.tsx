@@ -57,7 +57,7 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
       <section className="panel">
         <div className="hero">
           <h1>模板管理</h1>
-          <p>模板只负责组织固定 7 个字段的输出格式。未知占位符会在保存时被拒绝。</p>
+          <p>模板应直接描述纪念币画面本身，不要写成“请生成一段 Prompt”这类元指令。未知占位符会在保存时被拒绝。</p>
         </div>
         <div className="field">
           <label htmlFor="templateName">模板名称</label>
@@ -67,7 +67,7 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
           <label htmlFor="templateContent">模板内容</label>
           <textarea
             id="templateContent"
-            placeholder="请基于以下结构化信息生成最终 Prompt..."
+            placeholder="直接描述纪念币画面，例如正反面元素、刻字和材质风格..."
             value={content}
             onChange={(event) => setContent(event.target.value)}
           />

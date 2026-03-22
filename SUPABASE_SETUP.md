@@ -10,13 +10,20 @@
 
 ## 2. Apply SQL Migration
 
-在 Supabase 的 SQL Editor 执行 [database/migrations/0001_init.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0001_init.sql)。
+在 Supabase 的 SQL Editor 依次执行：
+
+- [database/migrations/0001_init.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0001_init.sql)
+- [database/migrations/0002_image_generation.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0002_image_generation.sql)
 
 该迁移会创建：
 
 - `model_configs`
 - `templates`
 - `extraction_jobs`
+- `image_model_configs`
+- `image_generation_tasks`
+- `image_generation_results`
+- `generated-images` Storage bucket
 - `updated_at` trigger
 - RLS policies
 

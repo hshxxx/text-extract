@@ -6,16 +6,25 @@ export const MAX_INPUT_LENGTH = 4000;
 export const EXTRACTION_TIMEOUT_MS = 30_000;
 export const EXTRACTION_RETRY_DELAYS_MS = [1000, 2000, 4000];
 export const EXTRACTION_RATE_LIMIT = 10;
+export const IMAGE_GENERATION_RATE_LIMIT_PER_DAY = 20;
+export const IMAGE_STORAGE_BUCKET = "generated-images";
+export const IMAGE_GENERATION_TIMEOUT_MS = 60_000;
 export const DEFAULT_TEMPLATE_NAME = "纪念币默认模板";
-export const DEFAULT_TEMPLATE_CONTENT = `请基于以下结构化信息，生成一段适合纪念币设计的标准 Prompt：
+export const DEFAULT_TEMPLATE_CONTENT = `Design a commemorative challenge coin for "{theme_en}" ({theme_cn}).
 
-主题（中文）：{theme_cn}
-主题（英文）：{theme_en}
-正面元素：{coin_front_element}
-正面文案：{coin_front_text}
-背面元素：{coin_back_element}
-背面文案：{coin_back_text}
-风格要求：{style_requirements}`;
+Show both the obverse and reverse of the same coin in one image.
+
+Obverse design:
+- Main elements: {coin_front_element}
+- Inscription engraved on the coin: {coin_front_text}
+
+Reverse design:
+- Main elements: {coin_back_element}
+- Inscription engraved on the coin: {coin_back_text}
+
+Style and finish:
+- {style_requirements}
+- realistic metal coin, embossed relief, collectible quality, clean studio lighting, detailed texture`;
 
 export const EMPTY_STRUCTURED_DATA: StructuredData = FIXED_SCHEMA_FIELDS.reduce(
   (acc, field) => {
@@ -36,3 +45,6 @@ export const EXTRACTION_SYSTEM_PROMPT = `你是一个结构化信息提取器。
 - style_requirements
 
 如果某个字段无法确定，返回空字符串。不要输出 Markdown，不要输出额外说明。`;
+
+export const DEFAULT_TEXT_MODEL_NAME = "gpt-5.4";
+export const DEFAULT_IMAGE_MODEL_NAME = "gpt-image-1.5";

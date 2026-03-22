@@ -2,10 +2,17 @@
 
 固定 Schema 的 Prompt 生成器 MVP，基于 Next.js App Router、Supabase Auth/Postgres 和 OpenAI 兼容接口。
 
+当前系统包含两条并列工作流：
+
+- `/extract`：文本提取，生成固定 Schema 对应的最终 Prompt
+- `/generate-image`：消费已生成 Prompt，调用图片模型生成图片并写入 Supabase Storage
+
 ## Local Setup
 
 1. 复制 `.env.example` 为 `.env.local`，填入 Supabase 项目配置和本地加密密钥。
-2. 在 Supabase SQL Editor 执行 [database/migrations/0001_init.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0001_init.sql)。
+2. 在 Supabase SQL Editor 依次执行：
+   - [database/migrations/0001_init.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0001_init.sql)
+   - [database/migrations/0002_image_generation.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0002_image_generation.sql)
 3. 在 Supabase Auth 中补充 Redirect URL：
    - `http://localhost:3000/api/auth/callback`
    - 生产域名对应的 `/api/auth/callback`
