@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { ListControls } from "@/components/list-controls";
 import type { TemplateRecord } from "@/lib/types/domain";
 import { FIXED_SCHEMA_FIELDS } from "@/lib/types/domain";
+import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 import { extractTemplatePlaceholders } from "@/utils/templateValidation";
 
 export function TemplateSettingsClient({ initialItems }: { initialItems: TemplateRecord[] }) {
@@ -13,9 +15,24 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
   const [isDefault, setIsDefault] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
   const [isPending, startTransition] = useTransition();
 
   const placeholders = useMemo(() => extractTemplatePlaceholders(content), [content]);
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = normalizeSearchQuery(query);
+    return items.filter((item) => {
+      if (filter === "default" && !item.is_default) return false;
+      if (filter === "seeded" && !item.is_seeded) return false;
+      if (filter === "custom" && item.is_seeded) return false;
+      if (!normalizedQuery) return true;
+      return [item.name, item.content].some((value) => value.toLowerCase().includes(normalizedQuery));
+    });
+  }, [filter, items, query]);
+  const pagedItems = useMemo(() => paginateItems(filteredItems, page, pageSize), [filteredItems, page, pageSize]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -122,8 +139,38 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
         </div>
         <div className="panel">
           <h2>已有模板</h2>
+          <ListControls
+            searchValue={query}
+            onSearchChange={(value) => {
+              setQuery(value);
+              setPage(1);
+            }}
+            searchPlaceholder="按模板名、内容搜索"
+            filterValue={filter}
+            filterOptions={[
+              { value: "all", label: "全部模板" },
+              { value: "default", label: "仅默认" },
+              { value: "seeded", label: "仅系统预置" },
+              { value: "custom", label: "仅自定义" },
+            ]}
+            onFilterChange={(value) => {
+              setFilter(value);
+              setPage(1);
+            }}
+            pageSize={pageSize}
+            onPageSizeChange={(value) => {
+              setPageSize(value);
+              setPage(1);
+            }}
+            currentPage={pagedItems.currentPage}
+            totalPages={pagedItems.totalPages}
+            totalItems={pagedItems.totalItems}
+            onPrevPage={() => setPage((current) => current - 1)}
+            onNextPage={() => setPage((current) => current + 1)}
+          />
           <div className="stack">
-            {items.map((item) => (
+            {pagedItems.totalItems === 0 ? <div className="empty-state">没有匹配的模板记录。</div> : null}
+            {pagedItems.items.map((item) => (
               <article key={item.id} className="list-card">
                 <header>
                   <div>

@@ -230,17 +230,21 @@ export async function runImageGeneration(
 
     const uploaded = await uploadGeneratedImageToStorage(supabase, userId, downloaded);
 
-    const { error: resultError } = await supabase.from("image_generation_results").insert({
-      task_id: task.id,
-      storage_path: uploaded.path,
-      image_url: uploaded.publicUrl,
-      provider_image_url: generated.providerImageUrl,
-      model: imageModel.model,
-      seed: generated.seed ?? null,
-    });
+    const { data: resultRecord, error: resultError } = await supabase
+      .from("image_generation_results")
+      .insert({
+        task_id: task.id,
+        storage_path: uploaded.path,
+        image_url: uploaded.publicUrl,
+        provider_image_url: generated.providerImageUrl,
+        model: imageModel.model,
+        seed: generated.seed ?? null,
+      })
+      .select("*")
+      .single();
 
-    if (resultError) {
-      throw resultError;
+    if (resultError || !resultRecord) {
+      throw resultError ?? new Error("无法保存图片生成结果。");
     }
 
     const { error: taskUpdateError } = await supabase
@@ -258,6 +262,7 @@ export async function runImageGeneration(
 
     return {
       taskId: task.id,
+      imageResultId: resultRecord.id,
       status: "success",
       imageUrl: uploaded.publicUrl,
       sourcePrompt,
@@ -280,6 +285,7 @@ export async function runImageGeneration(
 
     return {
       taskId: task.id,
+      imageResultId: null,
       status: "failed",
       imageUrl: null,
       sourcePrompt,

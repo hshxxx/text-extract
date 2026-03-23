@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { ListControls } from "@/components/list-controls";
 import type {
   ExtractionResultListItem,
   ImageGenerationResponse,
   ImageModelConfigRecord,
   ImageSize,
 } from "@/lib/types/domain";
+import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
 type SafeImageModelConfig = Omit<ImageModelConfigRecord, "api_key_encrypted">;
 
@@ -24,6 +26,10 @@ export function ImageGenerationClient({
 }: ImageGenerationClientProps) {
   const [prompts, setPrompts] = useState(initialPrompts);
   const [selectedPromptId, setSelectedPromptId] = useState(initialPrompts[0]?.id ?? "");
+  const [promptQuery, setPromptQuery] = useState("");
+  const [promptFilter, setPromptFilter] = useState("all");
+  const [promptPageSize, setPromptPageSize] = useState(10);
+  const [promptPage, setPromptPage] = useState(1);
   const [imageModelConfigId, setImageModelConfigId] = useState(
     initialImageModels.find((item) => item.is_default)?.id ?? initialImageModels[0]?.id ?? "",
   );
@@ -37,8 +43,39 @@ export function ImageGenerationClient({
     [prompts, selectedPromptId],
   );
 
+  const filteredPrompts = useMemo(() => {
+    const query = normalizeSearchQuery(promptQuery);
+    const now = Date.now();
+
+    return prompts.filter((item) => {
+      if (promptFilter === "7d" && now - new Date(item.created_at).getTime() > 7 * 24 * 60 * 60 * 1000) {
+        return false;
+      }
+      if (promptFilter === "30d" && now - new Date(item.created_at).getTime() > 30 * 24 * 60 * 60 * 1000) {
+        return false;
+      }
+      if (!query) return true;
+      return item.prompt.toLowerCase().includes(query) || item.id.toLowerCase().includes(query);
+    });
+  }, [promptFilter, promptQuery, prompts]);
+
+  const pagedPrompts = useMemo(
+    () => paginateItems(filteredPrompts, promptPage, promptPageSize),
+    [filteredPrompts, promptPage, promptPageSize],
+  );
+
+  useEffect(() => {
+    setPromptPage(pagedPrompts.currentPage);
+  }, [pagedPrompts.currentPage]);
+
+  useEffect(() => {
+    if (!filteredPrompts.some((item) => item.id === selectedPromptId)) {
+      setSelectedPromptId(filteredPrompts[0]?.id ?? "");
+    }
+  }, [filteredPrompts, selectedPromptId]);
+
   async function refreshPrompts() {
-    const response = await fetch("/api/extraction-results?limit=20");
+    const response = await fetch("/api/extraction-results?limit=50");
     const data = await response.json();
 
     if (!response.ok) {
@@ -87,8 +124,37 @@ export function ImageGenerationClient({
             刷新 Prompt
           </button>
         </div>
+        <ListControls
+          searchValue={promptQuery}
+          onSearchChange={(value) => {
+            setPromptQuery(value);
+            setPromptPage(1);
+          }}
+          searchPlaceholder="按 Prompt 内容或任务 ID 搜索"
+          filterValue={promptFilter}
+          filterOptions={[
+            { value: "all", label: "全部" },
+            { value: "7d", label: "近 7 天" },
+            { value: "30d", label: "近 30 天" },
+          ]}
+          onFilterChange={(value) => {
+            setPromptFilter(value);
+            setPromptPage(1);
+          }}
+          pageSize={promptPageSize}
+          onPageSizeChange={(value) => {
+            setPromptPageSize(value);
+            setPromptPage(1);
+          }}
+          currentPage={pagedPrompts.currentPage}
+          totalPages={pagedPrompts.totalPages}
+          totalItems={pagedPrompts.totalItems}
+          onPrevPage={() => setPromptPage((current) => current - 1)}
+          onNextPage={() => setPromptPage((current) => current + 1)}
+        />
         <div className="stack">
-          {prompts.map((item) => (
+          {pagedPrompts.totalItems === 0 ? <div className="empty-state">没有匹配的 Prompt 记录。</div> : null}
+          {pagedPrompts.items.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -195,6 +261,11 @@ export function ImageGenerationClient({
                   <a href={result.imageUrl} className="ghost-button" download target="_blank" rel="noreferrer">
                     下载图片
                   </a>
+                ) : null}
+                {result?.imageResultId ? (
+                  <Link href={`/edit-image?source=${result.imageResultId}`} className="ghost-button">
+                    Edit Image
+                  </Link>
                 ) : null}
               </div>
             </>

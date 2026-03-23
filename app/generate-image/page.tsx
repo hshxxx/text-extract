@@ -7,7 +7,7 @@ import { listImageModelConfigs } from "@/lib/services/imageModels";
 export default async function GenerateImagePage() {
   const { supabase, user } = await requireUser();
   const [prompts, imageModels] = await Promise.all([
-    listExtractionResultsForImage(supabase, user.id),
+    listExtractionResultsForImage(supabase, user.id, 50),
     listImageModelConfigs(supabase, user.id),
   ]);
   const safeImageModels = imageModels.map(({ api_key_encrypted: _secret, ...rest }) => rest);

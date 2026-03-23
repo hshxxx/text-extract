@@ -9,6 +9,9 @@ export const EXTRACTION_RATE_LIMIT = 10;
 export const IMAGE_GENERATION_RATE_LIMIT_PER_DAY = 20;
 export const IMAGE_STORAGE_BUCKET = "generated-images";
 export const IMAGE_GENERATION_TIMEOUT_MS = 60_000;
+export const IMAGE_EDITING_TIMEOUT_MS = 120_000;
+export const IMAGE_EDITING_RETRY_DELAYS_MS = [3000];
+export const EDIT_TASK_STORAGE_PREFIX = "edit-tasks";
 export const DEFAULT_TEMPLATE_NAME = "纪念币默认模板";
 export const DEFAULT_TEMPLATE_CONTENT = `Design a commemorative challenge coin for "{theme_en}" ({theme_cn}).
 

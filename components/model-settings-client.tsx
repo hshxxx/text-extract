@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { ListControls } from "@/components/list-controls";
 import type {
   ImageModelConfigRecord,
   ModelConfigRecord,
   Provider,
   ImageProvider,
 } from "@/lib/types/domain";
+import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
 type SafeTextModelConfig = Omit<ModelConfigRecord, "api_key_encrypted">;
 type SafeImageModelConfig = Omit<ImageModelConfigRecord, "api_key_encrypted">;
@@ -48,9 +50,50 @@ export function ModelSettingsClient({
   const [imageMessage, setImageMessage] = useState<string | null>(null);
   const [textError, setTextError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [textQuery, setTextQuery] = useState("");
+  const [imageQuery, setImageQuery] = useState("");
+  const [textFilter, setTextFilter] = useState("all");
+  const [imageFilter, setImageFilter] = useState("all");
+  const [textPageSize, setTextPageSize] = useState(10);
+  const [imagePageSize, setImagePageSize] = useState(10);
+  const [textPage, setTextPage] = useState(1);
+  const [imagePage, setImagePage] = useState(1);
   const [isPending, startTransition] = useTransition();
   const textProvider: Provider = "openai";
   const imageProvider: ImageProvider = "openai";
+
+  const filteredTextItems = useMemo(() => {
+    const query = normalizeSearchQuery(textQuery);
+    return textItems.filter((item) => {
+      if (textFilter === "default" && !item.is_default) return false;
+      if (textFilter === "non_default" && item.is_default) return false;
+      if (!query) return true;
+      return [item.name, item.model, item.base_url ?? ""].some((value) =>
+        value.toLowerCase().includes(query),
+      );
+    });
+  }, [textFilter, textItems, textQuery]);
+
+  const filteredImageItems = useMemo(() => {
+    const query = normalizeSearchQuery(imageQuery);
+    return imageItems.filter((item) => {
+      if (imageFilter === "default" && !item.is_default) return false;
+      if (imageFilter === "non_default" && item.is_default) return false;
+      if (!query) return true;
+      return [item.name, item.model, item.base_url ?? ""].some((value) =>
+        value.toLowerCase().includes(query),
+      );
+    });
+  }, [imageFilter, imageItems, imageQuery]);
+
+  const pagedTextItems = useMemo(
+    () => paginateItems(filteredTextItems, textPage, textPageSize),
+    [filteredTextItems, textPage, textPageSize],
+  );
+  const pagedImageItems = useMemo(
+    () => paginateItems(filteredImageItems, imagePage, imagePageSize),
+    [filteredImageItems, imagePage, imagePageSize],
+  );
 
   const resetTextForm = () => {
     setTextEditingId(null);
@@ -259,9 +302,37 @@ export function ModelSettingsClient({
 
         <section className="panel">
           <h2>已有文本模型</h2>
+          <ListControls
+            searchValue={textQuery}
+            onSearchChange={(value) => {
+              setTextQuery(value);
+              setTextPage(1);
+            }}
+            searchPlaceholder="按名称、模型、Base URL 搜索"
+            filterValue={textFilter}
+            filterOptions={[
+              { value: "all", label: "全部模型" },
+              { value: "default", label: "仅默认" },
+              { value: "non_default", label: "仅非默认" },
+            ]}
+            onFilterChange={(value) => {
+              setTextFilter(value);
+              setTextPage(1);
+            }}
+            pageSize={textPageSize}
+            onPageSizeChange={(value) => {
+              setTextPageSize(value);
+              setTextPage(1);
+            }}
+            currentPage={pagedTextItems.currentPage}
+            totalPages={pagedTextItems.totalPages}
+            totalItems={pagedTextItems.totalItems}
+            onPrevPage={() => setTextPage((current) => current - 1)}
+            onNextPage={() => setTextPage((current) => current + 1)}
+          />
           <div className="stack">
-            {textItems.length === 0 ? <div className="empty-state">还没有文本模型配置。</div> : null}
-            {textItems.map((item) => (
+            {pagedTextItems.totalItems === 0 ? <div className="empty-state">还没有文本模型配置。</div> : null}
+            {pagedTextItems.items.map((item) => (
               <article key={item.id} className="list-card">
                 <header>
                   <div>
@@ -407,9 +478,37 @@ export function ModelSettingsClient({
 
         <section className="panel">
           <h2>已有图片模型</h2>
+          <ListControls
+            searchValue={imageQuery}
+            onSearchChange={(value) => {
+              setImageQuery(value);
+              setImagePage(1);
+            }}
+            searchPlaceholder="按名称、模型、Base URL 搜索"
+            filterValue={imageFilter}
+            filterOptions={[
+              { value: "all", label: "全部模型" },
+              { value: "default", label: "仅默认" },
+              { value: "non_default", label: "仅非默认" },
+            ]}
+            onFilterChange={(value) => {
+              setImageFilter(value);
+              setImagePage(1);
+            }}
+            pageSize={imagePageSize}
+            onPageSizeChange={(value) => {
+              setImagePageSize(value);
+              setImagePage(1);
+            }}
+            currentPage={pagedImageItems.currentPage}
+            totalPages={pagedImageItems.totalPages}
+            totalItems={pagedImageItems.totalItems}
+            onPrevPage={() => setImagePage((current) => current - 1)}
+            onNextPage={() => setImagePage((current) => current + 1)}
+          />
           <div className="stack">
-            {imageItems.length === 0 ? <div className="empty-state">还没有图片模型配置。</div> : null}
-            {imageItems.map((item) => (
+            {pagedImageItems.totalItems === 0 ? <div className="empty-state">还没有图片模型配置。</div> : null}
+            {pagedImageItems.items.map((item) => (
               <article key={item.id} className="list-card">
                 <header>
                   <div>

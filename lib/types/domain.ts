@@ -118,6 +118,36 @@ export type ImageModelConfigInput = {
 };
 
 export type ImageGenerationStatus = "processing" | "success" | "failed";
+export type EditTaskStatus =
+  | "splitting"
+  | "trimming"
+  | "validating"
+  | "editing_front"
+  | "editing_back"
+  | "uploading"
+  | "partial_success"
+  | "completed"
+  | "failed";
+export type EditJobStatus = "processing" | "success" | "failed";
+export type EditSide = "front" | "back";
+export type EditStyleKey =
+  | "luxury_wood"
+  | "premium_giftbox"
+  | "dark_luxury_stage"
+  | "soft_studio_light"
+  | "elegant_pedestal"
+  | "premium_velvet";
+export type EditErrorCode =
+  | "SPLIT_FAILED"
+  | "TRIM_EMPTY"
+  | "BOUNDING_BOX_TOO_SMALL"
+  | "OBJECT_TOO_CLOSE_TO_EDGE"
+  | "SOURCE_NOT_FOUND"
+  | "PHOTOROOM_REQUEST_FAILED"
+  | "PHOTOROOM_TIMEOUT"
+  | "PHOTOROOM_INVALID_RESPONSE"
+  | "UPLOAD_FAILED"
+  | "DB_WRITE_FAILED";
 
 export type ImageGenerationTaskRecord = {
   id: string;
@@ -142,14 +172,70 @@ export type ImageGenerationResultRecord = {
   created_at: string;
 };
 
+export type EditTaskRecord = {
+  id: string;
+  user_id: string;
+  source_image_id: string;
+  status: EditTaskStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EditJobRecord = {
+  id: string;
+  task_id: string;
+  side: EditSide;
+  style: EditStyleKey;
+  status: EditJobStatus;
+  error_code: EditErrorCode | null;
+  error_message: string | null;
+  source_storage_path: string | null;
+  provider_raw_storage_path: string | null;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ImageGenerationRequest = {
   extractionResultId: string;
   imageModelConfigId: string;
   imageSize: ImageSize;
 };
 
+export type CreateEditTaskRequest = {
+  source_image_id: string;
+};
+
+export type CreateEditTaskResponse = {
+  task_id: string;
+  status: EditTaskStatus;
+  front_job_id: string | null;
+  back_job_id: string | null;
+  front_status: EditJobStatus | null;
+  back_status: EditJobStatus | null;
+  front_image: string | null;
+  back_image: string | null;
+  error_code?: EditErrorCode | null;
+  error_message?: string | null;
+};
+
+export type RetryEditJobResponse = {
+  task_id: string;
+  new_job_id: string;
+  status: EditTaskStatus;
+  front_job_id: string | null;
+  back_job_id: string | null;
+  front_status: EditJobStatus | null;
+  back_status: EditJobStatus | null;
+  front_image: string | null;
+  back_image: string | null;
+  error_code?: EditErrorCode | null;
+  error_message?: string | null;
+};
+
 export type ImageGenerationResponse = {
   taskId: string;
+  imageResultId: string | null;
   status: ImageGenerationStatus;
   imageUrl: string | null;
   sourcePrompt: string;
@@ -178,4 +264,46 @@ export type ImageHistoryDetail = {
   result: ImageGenerationResultRecord | null;
   sourcePrompt: string;
   modelName: string;
+};
+
+export type EditableImageListItem = {
+  id: string;
+  taskId: string;
+  imageUrl: string;
+  createdAt: string;
+  edited: boolean;
+  latestEditTaskId: string | null;
+  latestEditStatus: EditTaskStatus | null;
+};
+
+export type EditHistoryItem = {
+  taskId: string;
+  sourceImageId: string;
+  createdAt: string;
+  status: EditTaskStatus;
+  frontStatus: EditJobStatus | null;
+  backStatus: EditJobStatus | null;
+  frontImage: string | null;
+  backImage: string | null;
+};
+
+export type EditHistoryDetail = {
+  task: EditTaskRecord;
+  sourceImageId: string;
+  sourceImageUrl: string | null;
+  frontJob: EditJobRecord | null;
+  backJob: EditJobRecord | null;
+};
+
+export type EditTaskDetailResponse = {
+  task_id: string;
+  task_status: EditTaskStatus;
+  front_job_id: string | null;
+  back_job_id: string | null;
+  front_status: EditJobStatus | null;
+  back_status: EditJobStatus | null;
+  front_image: string | null;
+  back_image: string | null;
+  error_code?: EditErrorCode | null;
+  error_message?: string | null;
 };
