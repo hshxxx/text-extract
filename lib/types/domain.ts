@@ -438,3 +438,162 @@ export type MarketingCopyHistoryItem = {
   draftResult: MarketingCopyResult;
   finalResult: MarketingCopyResult | null;
 };
+
+export type GoogleOAuthAccountRecord = {
+  id: string;
+  user_id: string;
+  google_email: string;
+  access_token_encrypted: string;
+  refresh_token_encrypted: string;
+  expiry_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GoogleAuthStatusResponse = {
+  connected: boolean;
+  googleEmail: string | null;
+};
+
+export type QuantityTemplateTier = {
+  optionValue: string;
+  price: number;
+  compareAtPrice: number;
+  inventoryQty: number;
+};
+
+export type QuantityTemplateRecord = {
+  id: string;
+  user_id: string | null;
+  name: string;
+  is_default: boolean;
+  is_seeded: boolean;
+  tiers_json: QuantityTemplateTier[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type QuantityTemplateInput = {
+  name: string;
+  isDefault?: boolean;
+  tiers: QuantityTemplateTier[];
+};
+
+export type ExportableProductItem = {
+  marketingCopyVersionId: string;
+  sourceImageId: string;
+  imageGenerationResultId: string;
+  frontEditJobId: string;
+  backEditJobId: string;
+  templateName: string;
+  createdAt: string;
+  titleEn: string;
+  descriptionEn: string;
+  frontImageUrl: string;
+  backImageUrl: string;
+};
+
+export type ExportProductSelection = {
+  marketingCopyVersionId: string;
+  quantityTemplateId: string;
+  variantOverrides?: QuantityTemplateTier[];
+};
+
+export type ExportPreviewProduct = {
+  marketingCopyVersionId: string;
+  quantityTemplateId: string;
+  titleEn: string;
+  handle: string;
+  frontImageUrl: string;
+  backImageUrl: string;
+  bodyHtml: string;
+  tiers: QuantityTemplateTier[];
+};
+
+export type ExportPreviewRow = {
+  internalProductId: string;
+  handle: string;
+  title: string;
+  bodyHtml: string;
+  vendor: string;
+  type: string;
+  tags: string;
+  status: string;
+  published: string;
+  option1Name: string;
+  option1Value: string;
+  variantSku: string;
+  variantPrice: string;
+  variantCompareAtPrice: string;
+  variantInventoryTracker: string;
+  variantInventoryQty: string;
+  imageSrc: string;
+  imageAltText: string;
+};
+
+export type ExportPreviewRequest = {
+  selections: ExportProductSelection[];
+};
+
+export type ExportPreviewResponse = {
+  batchName: string;
+  products: ExportPreviewProduct[];
+  rows: ExportPreviewRow[];
+};
+
+export type ExportBatchRecord = {
+  id: string;
+  user_id: string;
+  sheet_id: string;
+  sheet_url: string;
+  batch_name: string;
+  product_count: number;
+  created_at: string;
+};
+
+export type ExportProductRecord = {
+  id: string;
+  batch_id: string;
+  export_product_id: string;
+  handle: string;
+  image_generation_result_id: string;
+  front_edit_job_id: string;
+  back_edit_job_id: string;
+  marketing_copy_version_id: string;
+  quantity_template_id: string;
+  variant_overrides_json: QuantityTemplateTier[] | null;
+  created_at: string;
+};
+
+export type ExportToGoogleSheetsResponse = {
+  batchId: string;
+  batchName: string;
+  sheetId: string;
+  sheetUrl: string;
+  exportedProductCount: number;
+};
+
+export type ExportHistoryItem = {
+  batchId: string;
+  batchName: string;
+  sheetUrl: string;
+  productCount: number;
+  createdAt: string;
+};
+
+export type ExportHistoryProductItem = {
+  exportProductId: string;
+  handle: string;
+  marketingCopyVersionId: string;
+  quantityTemplateName: string;
+  titleEn: string;
+  frontImageUrl: string | null;
+  backImageUrl: string | null;
+  variantOverrides: QuantityTemplateTier[] | null;
+};
+
+export type ExportHistoryDetail = {
+  batch: ExportBatchRecord;
+  products: ExportHistoryProductItem[];
+};
+
