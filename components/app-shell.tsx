@@ -8,14 +8,14 @@ type AppShellProps = {
 };
 
 const NAV_ITEMS = [
-  { href: "/extract", label: "????????????" },
-  { href: "/generate-image", label: "????????????" },
-  { href: "/edit-image", label: "????????????" },
-  { href: "/marketing-copy", label: "????????????" },
-  { href: "/export-to-sheets", label: "?????? Sheets" },
-  { href: "/settings/models", label: "????????????" },
-  { href: "/settings/templates", label: "????????????" },
-  { href: "/history", label: "????????????" },
+  { href: "/extract", label: "文本解析" },
+  { href: "/generate-image", label: "图片生成" },
+  { href: "/edit-image", label: "图片编辑" },
+  { href: "/marketing-copy", label: "文案生成" },
+  { href: "/export-to-sheets", label: "导出 Sheets" },
+  { href: "/settings/models", label: "模型配置" },
+  { href: "/settings/templates", label: "模板管理" },
+  { href: "/history", label: "历史记录" },
 ];
 
 export function AppShell({ activePath, userEmail, children }: AppShellProps) {
@@ -24,7 +24,7 @@ export function AppShell({ activePath, userEmail, children }: AppShellProps) {
       <header className="app-header">
         <div className="brand-block">
           <h1>AI Prompt Structurer</h1>
-          <p>{userEmail ?? "?????????"} ?? ?????? Schema Prompt ?????????</p>
+          <p>{userEmail ?? "未登录"} · 固定 Schema Prompt 生成器</p>
         </div>
         <div className="stack" style={{ gap: 12, alignItems: "flex-end" }}>
           <nav className="nav-links">
