@@ -35,6 +35,7 @@ export function HistoryClient({
   const [imageItems] = useState(initialImageItems);
   const [editItems] = useState(initialEditItems);
   const [marketingItems] = useState(initialMarketingItems);
+  const [exportItems] = useState(initialExportItems);
   const [selectedText, setSelectedText] = useState<ExtractionJobRecord | null>(initialTextItems[0] ?? null);
   const [selectedImage, setSelectedImage] = useState<ImageHistoryDetail | null>(null);
   const [selectedEdit, setSelectedEdit] = useState<EditHistoryDetail | null>(null);
@@ -180,7 +181,7 @@ export function HistoryClient({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "?????????????????????????????????");
+      throw new Error(data.error ?? "获取文本历史详情失败。");
     }
 
     setSelectedText(data.item);
@@ -192,7 +193,7 @@ export function HistoryClient({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "?????????????????????????????????");
+      throw new Error(data.error ?? "获取图片历史详情失败。");
     }
 
     setSelectedImage(data.item);
@@ -204,7 +205,7 @@ export function HistoryClient({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "?????????????????????????????????");
+      throw new Error(data.error ?? "获取图片编辑详情失败。");
     }
 
     setSelectedEdit(data.item as EditHistoryDetail);
@@ -216,7 +217,7 @@ export function HistoryClient({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "?????????????????????????????????");
+      throw new Error(data.error ?? "获取营销文案详情失败。");
     }
 
     setSelectedMarketing(data.item as MarketingCopyVersionDetail);
@@ -228,7 +229,7 @@ export function HistoryClient({
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error ?? "?????????????????????????????????");
+      throw new Error(data.error ?? "获取导出历史详情失败。");
     }
 
     setSelectedExport(data.item as ExportHistoryDetail);
@@ -241,24 +242,24 @@ export function HistoryClient({
     <div className="grid-2">
       <section className="panel">
         <div className="hero">
-          <h1>????????????</h1>
-          <p>????????????????????????????????????????????????????????????????????????????????????????????????</p>
+          <h1>历史记录</h1>
+          <p>文本提取、图片生成、图片编辑和营销文案都会在这里保留可追溯历史。</p>
         </div>
         <div className="tab-row" style={{ marginBottom: 16 }}>
           <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("text")}>
-            ????????????
+            文本提取
           </button>
           <button type="button" className={activeTab === "image" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("image")}>
-            ????????????
+            图片生成
           </button>
           <button type="button" className={activeTab === "edit" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("edit")}>
-            ????????????
+            图片编辑
           </button>
           <button type="button" className={activeTab === "marketing" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("marketing")}>
-            ????????????
+            文案生成
           </button>
           <button type="button" className={activeTab === "export" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("export")}>
-            ?????? Sheets
+            导出 Sheets
           </button>
         </div>
 
@@ -270,12 +271,12 @@ export function HistoryClient({
                 setTextQuery(value);
                 setTextPage(1);
               }}
-              searchPlaceholder="??????????????????Prompt???????????????"
+              searchPlaceholder="按输入内容、Prompt、时间搜索"
               filterValue={textFilter}
               filterOptions={[
-                { value: "all", label: "????????????" },
-                { value: "success", label: "??????" },
-                { value: "failed", label: "??????" },
+                { value: "all", label: "全部状态" },
+                { value: "success", label: "成功" },
+                { value: "failed", label: "失败" },
               ]}
               onFilterChange={(value) => {
                 setTextFilter(value);
@@ -292,13 +293,13 @@ export function HistoryClient({
               onPrevPage={() => setTextPage((current) => current - 1)}
               onNextPage={() => setTextPage((current) => current + 1)}
             />
-            {pagedTextItems.totalItems === 0 ? <div className="empty-state">????????????????????????????????????</div> : null}
+            {pagedTextItems.totalItems === 0 ? <div className="empty-state">还没有文本提取历史任务。</div> : null}
             {pagedTextItems.items.map((item) => (
               <article key={item.id} className="list-card">
                 <header>
                   <div>
                     <strong>{new Date(item.created_at).toLocaleString("zh-CN")}</strong>
-                    <div className="subtle">{item.raw_input.slice(0, 72) || "?????????"}</div>
+                    <div className="subtle">{item.raw_input.slice(0, 72) || "空输入"}</div>
                   </div>
                   <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>{item.status}</span>
                 </header>
@@ -312,12 +313,12 @@ export function HistoryClient({
                         try {
                           await openTextDetail(item.id);
                         } catch (detailError) {
-                          setError(detailError instanceof Error ? detailError.message : "?????????????????????????????????");
+                          setError(detailError instanceof Error ? detailError.message : "获取文本历史详情失败。");
                         }
                       })
                     }
                   >
-                    ????????????
+                    查看详情
                   </button>
                 </div>
               </article>
@@ -331,12 +332,12 @@ export function HistoryClient({
                 setImageQuery(value);
                 setImagePage(1);
               }}
-              searchPlaceholder="??? Prompt??????????????????????????? ID ??????"
+              searchPlaceholder="按 Prompt、模型、尺寸、任务 ID 搜索"
               filterValue={imageFilter}
               filterOptions={[
-                { value: "all", label: "????????????" },
-                { value: "success", label: "??????" },
-                { value: "failed", label: "??????" },
+                { value: "all", label: "全部状态" },
+                { value: "success", label: "成功" },
+                { value: "failed", label: "失败" },
               ]}
               onFilterChange={(value) => {
                 setImageFilter(value);
@@ -353,13 +354,13 @@ export function HistoryClient({
               onPrevPage={() => setImagePage((current) => current - 1)}
               onNextPage={() => setImagePage((current) => current + 1)}
             />
-            {pagedImageItems.totalItems === 0 ? <div className="empty-state">????????????????????????????????????</div> : null}
+            {pagedImageItems.totalItems === 0 ? <div className="empty-state">还没有图片生成历史任务。</div> : null}
             {pagedImageItems.items.map((item) => (
               <article key={item.taskId} className="list-card">
                 <header>
                   <div>
                     <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                    <div className="subtle">{item.modelName} ?? {item.imageSize}</div>
+                    <div className="subtle">{item.modelName} · {item.imageSize}</div>
                   </div>
                   <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>{item.status}</span>
                 </header>
@@ -379,12 +380,12 @@ export function HistoryClient({
                         try {
                           await openImageDetail(item.taskId);
                         } catch (detailError) {
-                          setError(detailError instanceof Error ? detailError.message : "?????????????????????????????????");
+                          setError(detailError instanceof Error ? detailError.message : "获取图片历史详情失败。");
                         }
                       })
                     }
                   >
-                    ????????????
+                    查看详情
                   </button>
                 </div>
               </article>
@@ -398,14 +399,14 @@ export function HistoryClient({
                 setEditQuery(value);
                 setEditPage(1);
               }}
-              searchPlaceholder="????????? ID??????????????????????????????"
+              searchPlaceholder="按任务 ID、来源图片、状态搜索"
               filterValue={editFilter}
               filterOptions={[
-                { value: "all", label: "????????????" },
-                { value: "completed", label: "?????????" },
-                { value: "partial_success", label: "????????????" },
-                { value: "failed", label: "??????" },
-                { value: "processing", label: "?????????" },
+                { value: "all", label: "全部状态" },
+                { value: "completed", label: "已完成" },
+                { value: "partial_success", label: "部分成功" },
+                { value: "failed", label: "失败" },
+                { value: "processing", label: "处理中" },
               ]}
               onFilterChange={(value) => {
                 setEditFilter(value);
@@ -422,22 +423,22 @@ export function HistoryClient({
               onPrevPage={() => setEditPage((current) => current - 1)}
               onNextPage={() => setEditPage((current) => current + 1)}
             />
-            {pagedEditItems.totalItems === 0 ? <div className="empty-state">????????????????????????????????????</div> : null}
+            {pagedEditItems.totalItems === 0 ? <div className="empty-state">还没有图片编辑历史任务。</div> : null}
             {pagedEditItems.items.map((item) => (
               <article key={item.taskId} className="list-card">
                 <header>
                   <div>
                     <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                    <div className="subtle">Front: {item.frontStatus ?? "?????????"} ?? Back: {item.backStatus ?? "?????????"}</div>
+                    <div className="subtle">Front: {item.frontStatus ?? "未开始"} · Back: {item.backStatus ?? "未开始"}</div>
                   </div>
                   <span className="status">{item.status}</span>
                 </header>
                 <div className="grid-2" style={{ marginTop: 12 }}>
                   <div className="history-image-thumb">
-                    {item.frontImage ? <img src={item.frontImage} alt="front edited history" className="generated-image" /> : <div className="empty-state">?????? Front</div>}
+                    {item.frontImage ? <img src={item.frontImage} alt="front edited history" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
                   </div>
                   <div className="history-image-thumb">
-                    {item.backImage ? <img src={item.backImage} alt="back edited history" className="generated-image" /> : <div className="empty-state">?????? Back</div>}
+                    {item.backImage ? <img src={item.backImage} alt="back edited history" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
                   </div>
                 </div>
                 <div className="button-row" style={{ marginTop: 12 }}>
@@ -450,12 +451,12 @@ export function HistoryClient({
                         try {
                           await openEditDetail(item.taskId);
                         } catch (detailError) {
-                          setError(detailError instanceof Error ? detailError.message : "?????????????????????????????????");
+                          setError(detailError instanceof Error ? detailError.message : "获取图片编辑详情失败。");
                         }
                       })
                     }
                   >
-                    ????????????
+                    查看详情
                   </button>
                 </div>
               </article>
@@ -469,12 +470,12 @@ export function HistoryClient({
                 setMarketingQuery(value);
                 setMarketingPage(1);
               }}
-              searchPlaceholder="?????????????????????????????????????????? ID ??????"
+              searchPlaceholder="按模板、标题、来源图片、版本 ID 搜索"
               filterValue={marketingFilter}
               filterOptions={[
-                { value: "all", label: "????????????" },
-                { value: "confirmed", label: "??? confirmed" },
-                { value: "draft", label: "?????? confirmed" },
+                { value: "all", label: "全部版本" },
+                { value: "confirmed", label: "仅 confirmed" },
+                { value: "draft", label: "仅未 confirmed" },
               ]}
               onFilterChange={(value) => {
                 setMarketingFilter(value);
@@ -491,7 +492,7 @@ export function HistoryClient({
               onPrevPage={() => setMarketingPage((current) => current - 1)}
               onNextPage={() => setMarketingPage((current) => current + 1)}
             />
-            {pagedMarketingItems.totalItems === 0 ? <div className="empty-state">??????????????????????????????</div> : null}
+            {pagedMarketingItems.totalItems === 0 ? <div className="empty-state">还没有文案生成历史。</div> : null}
             {pagedMarketingItems.items.map((item) => (
               <article key={item.versionId} className="list-card">
                 <header>
@@ -506,14 +507,14 @@ export function HistoryClient({
                     item.finalResult?.shopify.title.en ||
                     item.draftResult.shopify.title.cn ||
                     item.draftResult.shopify.title.en ||
-                    "?????????????????????"}
+                    "未命名文案版本"}
                 </p>
                 <div className="grid-2" style={{ marginTop: 12 }}>
                   <div className="history-image-thumb">
-                    {item.frontImageUrl ? <img src={item.frontImageUrl} alt="marketing front" className="generated-image" /> : <div className="empty-state">?????? Front</div>}
+                    {item.frontImageUrl ? <img src={item.frontImageUrl} alt="marketing front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
                   </div>
                   <div className="history-image-thumb">
-                    {item.backImageUrl ? <img src={item.backImageUrl} alt="marketing back" className="generated-image" /> : <div className="empty-state">?????? Back</div>}
+                    {item.backImageUrl ? <img src={item.backImageUrl} alt="marketing back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
                   </div>
                 </div>
                 <div className="button-row" style={{ marginTop: 12 }}>
@@ -526,12 +527,12 @@ export function HistoryClient({
                         try {
                           await openMarketingDetail(item.versionId);
                         } catch (detailError) {
-                          setError(detailError instanceof Error ? detailError.message : "?????????????????????????????????");
+                          setError(detailError instanceof Error ? detailError.message : "获取营销文案详情失败。");
                         }
                       })
                     }
                   >
-                    ????????????
+                    查看详情
                   </button>
                 </div>
               </article>
@@ -545,12 +546,12 @@ export function HistoryClient({
                 setExportQuery(value);
                 setExportPage(1);
               }}
-              searchPlaceholder="????????????????????? ID???sheet ????????????"
+              searchPlaceholder="按批次名、批次 ID、sheet 链接搜索"
               filterValue={exportFilter}
               filterOptions={[
-                { value: "all", label: "????????????" },
-                { value: "single", label: "???????????????" },
-                { value: "multiple", label: "???????????????" },
+                { value: "all", label: "全部批次" },
+                { value: "single", label: "单商品批次" },
+                { value: "multiple", label: "多商品批次" },
               ]}
               onFilterChange={(value) => {
                 setExportFilter(value);
@@ -567,7 +568,7 @@ export function HistoryClient({
               onPrevPage={() => setExportPage((current) => current - 1)}
               onNextPage={() => setExportPage((current) => current + 1)}
             />
-            {pagedExportItems.totalItems === 0 ? <div className="empty-state">?????????????????? Google Sheets ????????????</div> : null}
+            {pagedExportItems.totalItems === 0 ? <div className="empty-state">还没有导出到 Google Sheets 的记录。</div> : null}
             {pagedExportItems.items.map((item) => (
               <article key={item.batchId} className="list-card">
                 <header>
@@ -588,15 +589,15 @@ export function HistoryClient({
                         try {
                           await openExportDetail(item.batchId);
                         } catch (detailError) {
-                          setError(detailError instanceof Error ? detailError.message : "?????????????????????????????????");
+                          setError(detailError instanceof Error ? detailError.message : "获取导出历史详情失败。");
                         }
                       })
                     }
                   >
-                    ????????????
+                    查看详情
                   </button>
                   <a href={item.sheetUrl} target="_blank" rel="noreferrer" className="ghost-button">
-                    ?????? Sheet
+                    打开 Sheet
                   </a>
                 </div>
               </article>
@@ -609,61 +610,61 @@ export function HistoryClient({
         {activeTab === "text" ? (
           <>
             <div className="panel">
-              <h2>??????????????????</h2>
+              <h2>文本任务详情</h2>
               {selectedText ? (
                 <>
                   <p className="subtle">
-                    ?????????{selectedText.status} ?? {new Date(selectedText.created_at).toLocaleString("zh-CN")}
+                    状态：{selectedText.status} · {new Date(selectedText.created_at).toLocaleString("zh-CN")}
                   </p>
                   {selectedText.error_message ? <p className="error-text">{selectedText.error_message}</p> : null}
                 </>
               ) : (
-                <div className="empty-state">????????????????????????????????????????????????</div>
+                <div className="empty-state">从左侧选择一条文本任务查看详情。</div>
               )}
               {error ? <p className="error-text">{error}</p> : null}
             </div>
             <div className="panel">
-              <h3>????????????</h3>
-              {selectedText?.template_snapshot ? <div className="mono-block">{selectedText.template_snapshot}</div> : <div className="empty-state">?????????????????????</div>}
+              <h3>模板快照</h3>
+              {selectedText?.template_snapshot ? <div className="mono-block">{selectedText.template_snapshot}</div> : <div className="empty-state">暂无模板快照。</div>}
             </div>
             <div className="panel">
-              <h3>???????????????</h3>
-              {selectedText?.structured_data ? <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div> : <div className="empty-state">????????????????????????????????????</div>}
+              <h3>结构化数据</h3>
+              {selectedText?.structured_data ? <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div> : <div className="empty-state">这条任务没有结构化数据。</div>}
             </div>
             <div className="panel">
-              <h3>?????? Prompt</h3>
-              {selectedText?.final_prompt ? <div className="mono-block">{selectedText.final_prompt}</div> : <div className="empty-state">?????????????????????????????? Prompt???</div>}
+              <h3>最终 Prompt</h3>
+              {selectedText?.final_prompt ? <div className="mono-block">{selectedText.final_prompt}</div> : <div className="empty-state">这条任务没有生成最终 Prompt。</div>}
             </div>
             <div className="panel">
-              <h3>??????????????????</h3>
-              {selectedText?.raw_model_output ? <div className="mono-block">{selectedText.raw_model_output}</div> : <div className="empty-state">?????????????????????????????????????????????</div>}
+              <h3>原始模型输出</h3>
+              {selectedText?.raw_model_output ? <div className="mono-block">{selectedText.raw_model_output}</div> : <div className="empty-state">这条任务没有记录原始模型输出。</div>}
             </div>
           </>
         ) : activeTab === "image" ? (
           <>
             <div className="panel">
-              <h2>??????????????????</h2>
+              <h2>图片任务详情</h2>
               {selectedImage ? (
                 <>
                   <p className="subtle">
-                    ?????????{selectedImage.task.status} ?? {new Date(selectedImage.task.created_at).toLocaleString("zh-CN")}
+                    状态：{selectedImage.task.status} · {new Date(selectedImage.task.created_at).toLocaleString("zh-CN")}
                   </p>
                   <p className="subtle">
-                    ?????????????????????{selectedImage.task.extraction_job_id} ?? ?????????{selectedImage.modelName} ?? ?????????{selectedImage.task.image_size}
+                    来源提取任务：{selectedImage.task.extraction_job_id} · 模型：{selectedImage.modelName} · 尺寸：{selectedImage.task.image_size}
                   </p>
                   {selectedImage.task.error_message ? <p className="error-text">{selectedImage.task.error_message}</p> : null}
                 </>
               ) : (
-                <div className="empty-state">????????????????????????????????????????????????</div>
+                <div className="empty-state">从左侧选择一条图片任务查看详情。</div>
               )}
               {error ? <p className="error-text">{error}</p> : null}
             </div>
             <div className="panel">
-              <h3>?????? Prompt</h3>
-              {selectedImage?.sourcePrompt ? <div className="mono-block">{selectedImage.sourcePrompt}</div> : <div className="empty-state">???????????? Prompt???</div>}
+              <h3>来源 Prompt</h3>
+              {selectedImage?.sourcePrompt ? <div className="mono-block">{selectedImage.sourcePrompt}</div> : <div className="empty-state">暂无来源 Prompt。</div>}
             </div>
             <div className="panel">
-              <h3>????????????</h3>
+              <h3>生成图片</h3>
               {selectedImage?.result?.image_url ? (
                 <div className="stack">
                   <div className="image-frame">
@@ -671,16 +672,16 @@ export function HistoryClient({
                   </div>
                   <div className="button-row">
                     <a href={selectedImage.result.image_url} className="ghost-button" target="_blank" rel="noreferrer">
-                      ????????????
+                      打开原图
                     </a>
                   </div>
                 </div>
               ) : (
-                <div className="empty-state">???????????????????????????????????????</div>
+                <div className="empty-state">这条任务没有可用图片结果。</div>
               )}
             </div>
             <div className="panel">
-              <h3>???????????????</h3>
+              <h3>结果元数据</h3>
               {selectedImage?.result ? (
                 <div className="mono-block">
                   {JSON.stringify(
@@ -697,36 +698,36 @@ export function HistoryClient({
                   )}
                 </div>
               ) : (
-                <div className="empty-state">????????????????????????</div>
+                <div className="empty-state">暂无结果元数据。</div>
               )}
             </div>
           </>
         ) : activeTab === "edit" ? (
           <>
             <div className="panel">
-              <h2>????????????????????????</h2>
+              <h2>图片编辑任务详情</h2>
               {selectedEdit ? (
                 <>
                   <p className="subtle">
-                    ?????????{selectedEdit.task.status} ?? {new Date(selectedEdit.task.created_at).toLocaleString("zh-CN")}
+                    状态：{selectedEdit.task.status} · {new Date(selectedEdit.task.created_at).toLocaleString("zh-CN")}
                   </p>
-                  <p className="subtle">???????????????{selectedEdit.sourceImageId}</p>
+                  <p className="subtle">来源图片：{selectedEdit.sourceImageId}</p>
                 </>
               ) : (
-                <div className="empty-state">??????????????????????????????????????????????????????</div>
+                <div className="empty-state">从左侧选择一条图片编辑任务查看详情。</div>
               )}
               {error ? <p className="error-text">{error}</p> : null}
             </div>
             <div className="panel">
               <h3>Front Final</h3>
-              {selectedEdit?.frontJob?.image_url ? <div className="image-frame"><img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" /></div> : <div className="empty-state">?????? Front Final???</div>}
+              {selectedEdit?.frontJob?.image_url ? <div className="image-frame"><img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" /></div> : <div className="empty-state">暂无 Front Final。</div>}
             </div>
             <div className="panel">
               <h3>Back Final</h3>
-              {selectedEdit?.backJob?.image_url ? <div className="image-frame"><img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" /></div> : <div className="empty-state">?????? Back Final???</div>}
+              {selectedEdit?.backJob?.image_url ? <div className="image-frame"><img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" /></div> : <div className="empty-state">暂无 Back Final。</div>}
             </div>
             <div className="panel">
-              <h3>????????????</h3>
+              <h3>状态摘要</h3>
               {selectedEdit ? (
                 <div className="mono-block">
                   {JSON.stringify(
@@ -744,43 +745,43 @@ export function HistoryClient({
                   )}
                 </div>
               ) : (
-                <div className="empty-state">???????????????????????????</div>
+                <div className="empty-state">暂无图片编辑详情。</div>
               )}
             </div>
           </>
         ) : activeTab === "marketing" ? (
           <>
             <div className="panel">
-              <h2>??????????????????</h2>
+              <h2>营销文案详情</h2>
               {selectedMarketing ? (
                 <>
                   <p className="subtle">
-                    ?????????{selectedMarketing.template?.name ?? "????????????"} ?? {new Date(selectedMarketing.version.created_at).toLocaleString("zh-CN")}
+                    模板：{selectedMarketing.template?.name ?? "未知模板"} · {new Date(selectedMarketing.version.created_at).toLocaleString("zh-CN")}
                   </p>
-                  <p className="subtle">Confirmed???{selectedMarketing.version.is_confirmed ? "???" : "???"}</p>
+                  <p className="subtle">Confirmed：{selectedMarketing.version.is_confirmed ? "是" : "否"}</p>
                 </>
               ) : (
-                <div className="empty-state">????????????????????????????????????????????????</div>
+                <div className="empty-state">从左侧选择一条文案版本查看详情。</div>
               )}
               {error ? <p className="error-text">{error}</p> : null}
             </div>
             <div className="panel">
-              <h3>????????????</h3>
+              <h3>素材图片</h3>
               {selectedMarketing ? (
                 <div className="grid-2">
                   <div className="history-image-thumb">
-                    {selectedMarketing.frontImageUrl ? <img src={selectedMarketing.frontImageUrl} alt="marketing detail front" className="generated-image" /> : <div className="empty-state">?????? Front</div>}
+                    {selectedMarketing.frontImageUrl ? <img src={selectedMarketing.frontImageUrl} alt="marketing detail front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
                   </div>
                   <div className="history-image-thumb">
-                    {selectedMarketing.backImageUrl ? <img src={selectedMarketing.backImageUrl} alt="marketing detail back" className="generated-image" /> : <div className="empty-state">?????? Back</div>}
+                    {selectedMarketing.backImageUrl ? <img src={selectedMarketing.backImageUrl} alt="marketing detail back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
                   </div>
                 </div>
               ) : (
-                <div className="empty-state">?????????????????????????????????</div>
+                <div className="empty-state">暂无营销文案素材预览。</div>
               )}
             </div>
             <div className="panel">
-              <h3>Shopify ??????</h3>
+              <h3>Shopify 标题</h3>
               {activeMarketingResult ? (
                 <div className="mono-block">
                   {JSON.stringify(
@@ -797,7 +798,7 @@ export function HistoryClient({
                   )}
                 </div>
               ) : (
-                <div className="empty-state">?????????????????????????????????</div>
+                <div className="empty-state">暂无营销文案标题摘要。</div>
               )}
             </div>
             <div className="panel">
@@ -808,7 +809,7 @@ export function HistoryClient({
                   <pre className="code-block">{activeMarketingResult.shopify.description.cn}</pre>
                 </div>
               ) : (
-                <div className="empty-state">?????? Shopify ???????????????</div>
+                <div className="empty-state">暂无 Shopify 描述内容。</div>
               )}
             </div>
             <div className="panel">
@@ -841,33 +842,33 @@ export function HistoryClient({
                   </pre>
                 </div>
               ) : (
-                <div className="empty-state">?????? Facebook ???????????????</div>
+                <div className="empty-state">暂无 Facebook 文案内容。</div>
               )}
             </div>
           </>
         ) : (
           <>
             <div className="panel">
-              <h2>??????????????????</h2>
+              <h2>导出批次详情</h2>
               {selectedExport ? (
                 <>
                   <p className="subtle">
-                    ?????????{selectedExport.batch.batch_name} ?? {new Date(selectedExport.batch.created_at).toLocaleString("zh-CN")}
+                    批次：{selectedExport.batch.batch_name} · {new Date(selectedExport.batch.created_at).toLocaleString("zh-CN")}
                   </p>
-                  <p className="subtle">????????????{selectedExport.batch.product_count}</p>
+                  <p className="subtle">商品数：{selectedExport.batch.product_count}</p>
                   <div className="button-row" style={{ marginTop: 12 }}>
                     <a href={selectedExport.batch.sheet_url} target="_blank" rel="noreferrer" className="ghost-button">
-                      ?????? Google Sheet
+                      打开 Google Sheet
                     </a>
                   </div>
                 </>
               ) : (
-                <div className="empty-state">????????????????????????????????????????????????</div>
+                <div className="empty-state">从左侧选择一条导出批次查看详情。</div>
               )}
               {error ? <p className="error-text">{error}</p> : null}
             </div>
             <div className="panel">
-              <h3>????????????</h3>
+              <h3>导出商品</h3>
               {selectedExport ? (
                 <div className="stack">
                   {selectedExport.products.map((item) => (
@@ -875,15 +876,15 @@ export function HistoryClient({
                       <header>
                         <div>
                           <strong>{item.titleEn}</strong>
-                          <div className="subtle">{item.handle} ?? {item.quantityTemplateName}</div>
+                          <div className="subtle">{item.handle} · {item.quantityTemplateName}</div>
                         </div>
                       </header>
                       <div className="grid-2" style={{ marginTop: 12 }}>
                         <div className="history-image-thumb">
-                          {item.frontImageUrl ? <img src={item.frontImageUrl} alt="export front" className="generated-image" /> : <div className="empty-state">?????? Front</div>}
+                          {item.frontImageUrl ? <img src={item.frontImageUrl} alt="export front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
                         </div>
                         <div className="history-image-thumb">
-                          {item.backImageUrl ? <img src={item.backImageUrl} alt="export back" className="generated-image" /> : <div className="empty-state">?????? Back</div>}
+                          {item.backImageUrl ? <img src={item.backImageUrl} alt="export back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
                         </div>
                       </div>
                       <div className="mono-block">
@@ -902,7 +903,7 @@ export function HistoryClient({
                   ))}
                 </div>
               ) : (
-                <div className="empty-state">???????????????????????????</div>
+                <div className="empty-state">暂无导出商品详情。</div>
               )}
             </div>
           </>
