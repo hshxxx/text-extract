@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/extract", label: "文本解析" },
   { href: "/generate-image", label: "图片生成" },
   { href: "/edit-image", label: "图片编辑" },
+  { href: "/marketing-copy", label: "文案生成" },
   { href: "/settings/models", label: "模型配置" },
   { href: "/settings/templates", label: "模板管理" },
   { href: "/history", label: "历史记录" },

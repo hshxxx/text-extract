@@ -146,6 +146,9 @@ export type EditErrorCode =
   | "PHOTOROOM_REQUEST_FAILED"
   | "PHOTOROOM_TIMEOUT"
   | "PHOTOROOM_INVALID_RESPONSE"
+  | "IMAGE_EDIT_REQUEST_FAILED"
+  | "IMAGE_EDIT_TIMEOUT"
+  | "IMAGE_EDIT_INVALID_RESPONSE"
   | "UPLOAD_FAILED"
   | "DB_WRITE_FAILED";
 
@@ -306,4 +309,132 @@ export type EditTaskDetailResponse = {
   back_image: string | null;
   error_code?: EditErrorCode | null;
   error_message?: string | null;
+};
+
+export type MarketingCopyTemplateRecord = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  prompt_guidance: string;
+  sort_order: number;
+  enabled: boolean;
+  created_at: string;
+};
+
+export type MarketingCopyLocalizedText = {
+  en: string;
+  cn: string;
+};
+
+export type MarketingCopyResult = {
+  shopify: {
+    title: MarketingCopyLocalizedText;
+    subtitle: MarketingCopyLocalizedText;
+    selling_points: MarketingCopyLocalizedText[];
+    description: MarketingCopyLocalizedText;
+  };
+  facebook: {
+    primary_text: MarketingCopyLocalizedText;
+    headline: MarketingCopyLocalizedText;
+    description: MarketingCopyLocalizedText;
+    cta_suggestion: MarketingCopyLocalizedText;
+  };
+};
+
+export type MarketingCopyVersionRecord = {
+  id: string;
+  user_id: string;
+  extraction_job_id: string;
+  image_generation_task_id: string;
+  image_generation_result_id: string;
+  front_edit_job_id: string;
+  back_edit_job_id: string;
+  marketing_copy_template_id: string;
+  model_config_id: string | null;
+  user_instruction: string | null;
+  draft_result_json: MarketingCopyResult;
+  final_result_json: MarketingCopyResult | null;
+  is_confirmed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MarketingCopySourceItem = {
+  sourceImageId: string;
+  imageGenerationTaskId: string;
+  extractionJobId: string;
+  sourceImageUrl: string;
+  createdAt: string;
+  promptPreview: string;
+  hasHistory: boolean;
+};
+
+export type MarketingCopyEditOption = {
+  id: string;
+  taskId: string;
+  side: EditSide;
+  imageUrl: string;
+  createdAt: string;
+  style: EditStyleKey;
+};
+
+export type MarketingCopySourceDetail = {
+  sourceImageId: string;
+  imageGenerationTaskId: string;
+  extractionJobId: string;
+  sourceImageUrl: string;
+  createdAt: string;
+  promptPreview: string;
+  rawInput: string;
+  frontOptions: MarketingCopyEditOption[];
+  backOptions: MarketingCopyEditOption[];
+  defaultFrontEditJobId: string | null;
+  defaultBackEditJobId: string | null;
+};
+
+export type MarketingCopyVersionListItem = {
+  id: string;
+  sourceImageId: string;
+  frontEditJobId: string;
+  backEditJobId: string;
+  templateId: string;
+  templateName: string;
+  createdAt: string;
+  isConfirmed: boolean;
+  draftResult: MarketingCopyResult;
+  finalResult: MarketingCopyResult | null;
+};
+
+export type MarketingCopyVersionDetail = {
+  version: MarketingCopyVersionRecord;
+  template: MarketingCopyTemplateRecord | null;
+  sourceImageUrl: string | null;
+  frontImageUrl: string | null;
+  backImageUrl: string | null;
+};
+
+export type GenerateMarketingCopyRequest = {
+  sourceImageId: string;
+  frontEditJobId: string;
+  backEditJobId: string;
+  templateId: string;
+  userInstruction?: string;
+};
+
+export type SaveMarketingCopyFinalRequest = {
+  finalResult: MarketingCopyResult;
+};
+
+export type MarketingCopyHistoryItem = {
+  versionId: string;
+  sourceImageId: string;
+  createdAt: string;
+  templateName: string;
+  isConfirmed: boolean;
+  sourceImageUrl: string | null;
+  frontImageUrl: string | null;
+  backImageUrl: string | null;
+  draftResult: MarketingCopyResult;
+  finalResult: MarketingCopyResult | null;
 };

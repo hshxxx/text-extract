@@ -8,6 +8,8 @@ import type {
   ExtractionJobRecord,
   ImageHistoryDetail,
   ImageHistoryItem,
+  MarketingCopyHistoryItem,
+  MarketingCopyVersionDetail,
 } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
@@ -15,33 +17,41 @@ type HistoryClientProps = {
   initialTextItems: ExtractionJobRecord[];
   initialImageItems: ImageHistoryItem[];
   initialEditItems: EditHistoryItem[];
+  initialMarketingItems: MarketingCopyHistoryItem[];
 };
 
 export function HistoryClient({
   initialTextItems,
   initialImageItems,
   initialEditItems,
+  initialMarketingItems,
 }: HistoryClientProps) {
-  const [activeTab, setActiveTab] = useState<"text" | "image" | "edit">("text");
+  const [activeTab, setActiveTab] = useState<"text" | "image" | "edit" | "marketing">("text");
   const [textItems] = useState(initialTextItems);
   const [imageItems] = useState(initialImageItems);
   const [editItems] = useState(initialEditItems);
+  const [marketingItems] = useState(initialMarketingItems);
   const [selectedText, setSelectedText] = useState<ExtractionJobRecord | null>(initialTextItems[0] ?? null);
   const [selectedImage, setSelectedImage] = useState<ImageHistoryDetail | null>(null);
   const [selectedEdit, setSelectedEdit] = useState<EditHistoryDetail | null>(null);
+  const [selectedMarketing, setSelectedMarketing] = useState<MarketingCopyVersionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [textQuery, setTextQuery] = useState("");
   const [imageQuery, setImageQuery] = useState("");
   const [editQuery, setEditQuery] = useState("");
+  const [marketingQuery, setMarketingQuery] = useState("");
   const [textFilter, setTextFilter] = useState("all");
   const [imageFilter, setImageFilter] = useState("all");
   const [editFilter, setEditFilter] = useState("all");
+  const [marketingFilter, setMarketingFilter] = useState("all");
   const [textPageSize, setTextPageSize] = useState(10);
   const [imagePageSize, setImagePageSize] = useState(10);
   const [editPageSize, setEditPageSize] = useState(10);
+  const [marketingPageSize, setMarketingPageSize] = useState(10);
   const [textPage, setTextPage] = useState(1);
   const [imagePage, setImagePage] = useState(1);
   const [editPage, setEditPage] = useState(1);
+  const [marketingPage, setMarketingPage] = useState(1);
   const [isPending, startTransition] = useTransition();
 
   const filteredTextItems = useMemo(() => {
@@ -74,7 +84,16 @@ export function HistoryClient({
   const filteredEditItems = useMemo(() => {
     const query = normalizeSearchQuery(editQuery);
     return editItems.filter((item) => {
-      if (editFilter === "processing" && !(item.status.startsWith("editing_") || item.status === "uploading" || item.status === "splitting" || item.status === "trimming" || item.status === "validating")) {
+      if (
+        editFilter === "processing" &&
+        !(
+          item.status.startsWith("editing_") ||
+          item.status === "uploading" ||
+          item.status === "splitting" ||
+          item.status === "trimming" ||
+          item.status === "validating"
+        )
+      ) {
         return false;
       }
       if (editFilter !== "all" && editFilter !== "processing" && item.status !== editFilter) return false;
@@ -90,6 +109,25 @@ export function HistoryClient({
     });
   }, [editFilter, editItems, editQuery]);
 
+  const filteredMarketingItems = useMemo(() => {
+    const query = normalizeSearchQuery(marketingQuery);
+    return marketingItems.filter((item) => {
+      if (marketingFilter === "confirmed" && !item.isConfirmed) return false;
+      if (marketingFilter === "draft" && item.isConfirmed) return false;
+      if (!query) return true;
+      return [
+        item.versionId,
+        item.sourceImageId,
+        item.templateName,
+        item.createdAt,
+        item.finalResult?.shopify.title.cn ?? "",
+        item.finalResult?.shopify.title.en ?? "",
+        item.draftResult.shopify.title.cn,
+        item.draftResult.shopify.title.en,
+      ].some((value) => value.toLowerCase().includes(query));
+    });
+  }, [marketingFilter, marketingItems, marketingQuery]);
+
   const pagedTextItems = useMemo(
     () => paginateItems(filteredTextItems, textPage, textPageSize),
     [filteredTextItems, textPage, textPageSize],
@@ -101,6 +139,10 @@ export function HistoryClient({
   const pagedEditItems = useMemo(
     () => paginateItems(filteredEditItems, editPage, editPageSize),
     [filteredEditItems, editPage, editPageSize],
+  );
+  const pagedMarketingItems = useMemo(
+    () => paginateItems(filteredMarketingItems, marketingPage, marketingPageSize),
+    [filteredMarketingItems, marketingPage, marketingPageSize],
   );
 
   async function openTextDetail(id: string) {
@@ -135,37 +177,44 @@ export function HistoryClient({
     if (!response.ok) {
       throw new Error(data.error ?? "获取图片编辑详情失败。");
     }
+
     setSelectedEdit(data.item as EditHistoryDetail);
   }
+
+  async function openMarketingDetail(id: string) {
+    setError(null);
+    const response = await fetch(`/api/marketing-copy/history/${id}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error ?? "获取营销文案详情失败。");
+    }
+
+    setSelectedMarketing(data.item as MarketingCopyVersionDetail);
+  }
+
+  const activeMarketingResult =
+    selectedMarketing?.version.final_result_json ?? selectedMarketing?.version.draft_result_json ?? null;
 
   return (
     <div className="grid-2">
       <section className="panel">
         <div className="hero">
           <h1>历史记录</h1>
-          <p>文本提取与图片生成分标签保存，便于反查 Prompt、模型和最终结果。</p>
+          <p>文本提取、图片生成、图片编辑和营销文案都会在这里保留可追溯历史。</p>
         </div>
         <div className="tab-row" style={{ marginBottom: 16 }}>
-          <button
-            type="button"
-            className={activeTab === "text" ? "nav-link-active" : "nav-link"}
-            onClick={() => setActiveTab("text")}
-          >
+          <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("text")}>
             文本提取
           </button>
-          <button
-            type="button"
-            className={activeTab === "image" ? "nav-link-active" : "nav-link"}
-            onClick={() => setActiveTab("image")}
-          >
+          <button type="button" className={activeTab === "image" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("image")}>
             图片生成
           </button>
-          <button
-            type="button"
-            className={activeTab === "edit" ? "nav-link-active" : "nav-link"}
-            onClick={() => setActiveTab("edit")}
-          >
+          <button type="button" className={activeTab === "edit" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("edit")}>
             图片编辑
+          </button>
+          <button type="button" className={activeTab === "marketing" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("marketing")}>
+            文案生成
           </button>
         </div>
 
@@ -207,9 +256,7 @@ export function HistoryClient({
                     <strong>{new Date(item.created_at).toLocaleString("zh-CN")}</strong>
                     <div className="subtle">{item.raw_input.slice(0, 72) || "空输入"}</div>
                   </div>
-                  <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>
-                    {item.status}
-                  </span>
+                  <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>{item.status}</span>
                 </header>
                 <div className="button-row">
                   <button
@@ -221,9 +268,7 @@ export function HistoryClient({
                         try {
                           await openTextDetail(item.id);
                         } catch (detailError) {
-                          setError(
-                            detailError instanceof Error ? detailError.message : "获取文本历史详情失败。",
-                          );
+                          setError(detailError instanceof Error ? detailError.message : "获取文本历史详情失败。");
                         }
                       })
                     }
@@ -270,13 +315,9 @@ export function HistoryClient({
                 <header>
                   <div>
                     <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                    <div className="subtle">
-                      {item.modelName} · {item.imageSize}
-                    </div>
+                    <div className="subtle">{item.modelName} · {item.imageSize}</div>
                   </div>
-                  <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>
-                    {item.status}
-                  </span>
+                  <span className={`status ${item.status === "success" ? "status-success" : "status-failed"}`}>{item.status}</span>
                 </header>
                 {item.imageUrl ? (
                   <div className="history-image-thumb">
@@ -294,9 +335,7 @@ export function HistoryClient({
                         try {
                           await openImageDetail(item.taskId);
                         } catch (detailError) {
-                          setError(
-                            detailError instanceof Error ? detailError.message : "获取图片历史详情失败。",
-                          );
+                          setError(detailError instanceof Error ? detailError.message : "获取图片历史详情失败。");
                         }
                       })
                     }
@@ -307,7 +346,7 @@ export function HistoryClient({
               </article>
             ))}
           </div>
-        ) : (
+        ) : activeTab === "edit" ? (
           <div className="stack">
             <ListControls
               searchValue={editQuery}
@@ -345,9 +384,7 @@ export function HistoryClient({
                 <header>
                   <div>
                     <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                    <div className="subtle">
-                      Front: {item.frontStatus ?? "未开始"} · Back: {item.backStatus ?? "未开始"}
-                    </div>
+                    <div className="subtle">Front: {item.frontStatus ?? "未开始"} · Back: {item.backStatus ?? "未开始"}</div>
                   </div>
                   <span className="status">{item.status}</span>
                 </header>
@@ -380,6 +417,82 @@ export function HistoryClient({
               </article>
             ))}
           </div>
+        ) : (
+          <div className="stack">
+            <ListControls
+              searchValue={marketingQuery}
+              onSearchChange={(value) => {
+                setMarketingQuery(value);
+                setMarketingPage(1);
+              }}
+              searchPlaceholder="按模板、标题、来源图片、版本 ID 搜索"
+              filterValue={marketingFilter}
+              filterOptions={[
+                { value: "all", label: "全部版本" },
+                { value: "confirmed", label: "仅 confirmed" },
+                { value: "draft", label: "仅未 confirmed" },
+              ]}
+              onFilterChange={(value) => {
+                setMarketingFilter(value);
+                setMarketingPage(1);
+              }}
+              pageSize={marketingPageSize}
+              onPageSizeChange={(value) => {
+                setMarketingPageSize(value);
+                setMarketingPage(1);
+              }}
+              currentPage={pagedMarketingItems.currentPage}
+              totalPages={pagedMarketingItems.totalPages}
+              totalItems={pagedMarketingItems.totalItems}
+              onPrevPage={() => setMarketingPage((current) => current - 1)}
+              onNextPage={() => setMarketingPage((current) => current + 1)}
+            />
+            {pagedMarketingItems.totalItems === 0 ? <div className="empty-state">还没有文案生成历史。</div> : null}
+            {pagedMarketingItems.items.map((item) => (
+              <article key={item.versionId} className="list-card">
+                <header>
+                  <div>
+                    <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
+                    <div className="subtle">{item.templateName}</div>
+                  </div>
+                  <span className="badge">{item.isConfirmed ? "Confirmed" : "Draft"}</span>
+                </header>
+                <p className="subtle">
+                  {item.finalResult?.shopify.title.cn ||
+                    item.finalResult?.shopify.title.en ||
+                    item.draftResult.shopify.title.cn ||
+                    item.draftResult.shopify.title.en ||
+                    "未命名文案版本"}
+                </p>
+                <div className="grid-2" style={{ marginTop: 12 }}>
+                  <div className="history-image-thumb">
+                    {item.frontImageUrl ? <img src={item.frontImageUrl} alt="marketing front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                  </div>
+                  <div className="history-image-thumb">
+                    {item.backImageUrl ? <img src={item.backImageUrl} alt="marketing back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
+                  </div>
+                </div>
+                <div className="button-row" style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    disabled={isPending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        try {
+                          await openMarketingDetail(item.versionId);
+                        } catch (detailError) {
+                          setError(detailError instanceof Error ? detailError.message : "获取营销文案详情失败。");
+                        }
+                      })
+                    }
+                  >
+                    查看详情
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
         )}
       </section>
 
@@ -402,35 +515,19 @@ export function HistoryClient({
             </div>
             <div className="panel">
               <h3>模板快照</h3>
-              {selectedText?.template_snapshot ? (
-                <div className="mono-block">{selectedText.template_snapshot}</div>
-              ) : (
-                <div className="empty-state">暂无模板快照。</div>
-              )}
+              {selectedText?.template_snapshot ? <div className="mono-block">{selectedText.template_snapshot}</div> : <div className="empty-state">暂无模板快照。</div>}
             </div>
             <div className="panel">
               <h3>结构化数据</h3>
-              {selectedText?.structured_data ? (
-                <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div>
-              ) : (
-                <div className="empty-state">这条任务没有结构化数据。</div>
-              )}
+              {selectedText?.structured_data ? <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div> : <div className="empty-state">这条任务没有结构化数据。</div>}
             </div>
             <div className="panel">
               <h3>最终 Prompt</h3>
-              {selectedText?.final_prompt ? (
-                <div className="mono-block">{selectedText.final_prompt}</div>
-              ) : (
-                <div className="empty-state">这条任务没有生成最终 Prompt。</div>
-              )}
+              {selectedText?.final_prompt ? <div className="mono-block">{selectedText.final_prompt}</div> : <div className="empty-state">这条任务没有生成最终 Prompt。</div>}
             </div>
             <div className="panel">
               <h3>原始模型输出</h3>
-              {selectedText?.raw_model_output ? (
-                <div className="mono-block">{selectedText.raw_model_output}</div>
-              ) : (
-                <div className="empty-state">这条任务没有记录原始模型输出。</div>
-              )}
+              {selectedText?.raw_model_output ? <div className="mono-block">{selectedText.raw_model_output}</div> : <div className="empty-state">这条任务没有记录原始模型输出。</div>}
             </div>
           </>
         ) : activeTab === "image" ? (
@@ -443,12 +540,9 @@ export function HistoryClient({
                     状态：{selectedImage.task.status} · {new Date(selectedImage.task.created_at).toLocaleString("zh-CN")}
                   </p>
                   <p className="subtle">
-                    来源提取任务：{selectedImage.task.extraction_job_id} · 模型：{selectedImage.modelName} · 尺寸：
-                    {selectedImage.task.image_size}
+                    来源提取任务：{selectedImage.task.extraction_job_id} · 模型：{selectedImage.modelName} · 尺寸：{selectedImage.task.image_size}
                   </p>
-                  {selectedImage.task.error_message ? (
-                    <p className="error-text">{selectedImage.task.error_message}</p>
-                  ) : null}
+                  {selectedImage.task.error_message ? <p className="error-text">{selectedImage.task.error_message}</p> : null}
                 </>
               ) : (
                 <div className="empty-state">从左侧选择一条图片任务查看详情。</div>
@@ -457,11 +551,7 @@ export function HistoryClient({
             </div>
             <div className="panel">
               <h3>来源 Prompt</h3>
-              {selectedImage?.sourcePrompt ? (
-                <div className="mono-block">{selectedImage.sourcePrompt}</div>
-              ) : (
-                <div className="empty-state">暂无来源 Prompt。</div>
-              )}
+              {selectedImage?.sourcePrompt ? <div className="mono-block">{selectedImage.sourcePrompt}</div> : <div className="empty-state">暂无来源 Prompt。</div>}
             </div>
             <div className="panel">
               <h3>生成图片</h3>
@@ -502,7 +592,7 @@ export function HistoryClient({
               )}
             </div>
           </>
-        ) : (
+        ) : activeTab === "edit" ? (
           <>
             <div className="panel">
               <h2>图片编辑任务详情</h2>
@@ -520,23 +610,11 @@ export function HistoryClient({
             </div>
             <div className="panel">
               <h3>Front Final</h3>
-              {selectedEdit?.frontJob?.image_url ? (
-                <div className="image-frame">
-                  <img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" />
-                </div>
-              ) : (
-                <div className="empty-state">暂无 Front Final。</div>
-              )}
+              {selectedEdit?.frontJob?.image_url ? <div className="image-frame"><img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" /></div> : <div className="empty-state">暂无 Front Final。</div>}
             </div>
             <div className="panel">
               <h3>Back Final</h3>
-              {selectedEdit?.backJob?.image_url ? (
-                <div className="image-frame">
-                  <img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" />
-                </div>
-              ) : (
-                <div className="empty-state">暂无 Back Final。</div>
-              )}
+              {selectedEdit?.backJob?.image_url ? <div className="image-frame"><img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" /></div> : <div className="empty-state">暂无 Back Final。</div>}
             </div>
             <div className="panel">
               <h3>状态摘要</h3>
@@ -558,6 +636,103 @@ export function HistoryClient({
                 </div>
               ) : (
                 <div className="empty-state">暂无图片编辑详情。</div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="panel">
+              <h2>营销文案详情</h2>
+              {selectedMarketing ? (
+                <>
+                  <p className="subtle">
+                    模板：{selectedMarketing.template?.name ?? "未知模板"} · {new Date(selectedMarketing.version.created_at).toLocaleString("zh-CN")}
+                  </p>
+                  <p className="subtle">Confirmed：{selectedMarketing.version.is_confirmed ? "是" : "否"}</p>
+                </>
+              ) : (
+                <div className="empty-state">从左侧选择一条文案版本查看详情。</div>
+              )}
+              {error ? <p className="error-text">{error}</p> : null}
+            </div>
+            <div className="panel">
+              <h3>素材图片</h3>
+              {selectedMarketing ? (
+                <div className="grid-2">
+                  <div className="history-image-thumb">
+                    {selectedMarketing.frontImageUrl ? <img src={selectedMarketing.frontImageUrl} alt="marketing detail front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                  </div>
+                  <div className="history-image-thumb">
+                    {selectedMarketing.backImageUrl ? <img src={selectedMarketing.backImageUrl} alt="marketing detail back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
+                  </div>
+                </div>
+              ) : (
+                <div className="empty-state">暂无营销文案素材预览。</div>
+              )}
+            </div>
+            <div className="panel">
+              <h3>Shopify 标题</h3>
+              {activeMarketingResult ? (
+                <div className="mono-block">
+                  {JSON.stringify(
+                    {
+                      shopify_title_en: activeMarketingResult.shopify.title.en,
+                      shopify_title_cn: activeMarketingResult.shopify.title.cn,
+                      shopify_subtitle_en: activeMarketingResult.shopify.subtitle.en,
+                      shopify_subtitle_cn: activeMarketingResult.shopify.subtitle.cn,
+                      facebook_headline_en: activeMarketingResult.facebook.headline.en,
+                      facebook_headline_cn: activeMarketingResult.facebook.headline.cn,
+                    },
+                    null,
+                    2,
+                  )}
+                </div>
+              ) : (
+                <div className="empty-state">暂无营销文案标题摘要。</div>
+              )}
+            </div>
+            <div className="panel">
+              <h3>Shopify Description EN / CN</h3>
+              {activeMarketingResult ? (
+                <div className="grid-2">
+                  <pre className="code-block">{activeMarketingResult.shopify.description.en}</pre>
+                  <pre className="code-block">{activeMarketingResult.shopify.description.cn}</pre>
+                </div>
+              ) : (
+                <div className="empty-state">暂无 Shopify 描述内容。</div>
+              )}
+            </div>
+            <div className="panel">
+              <h3>Facebook Copy EN / CN</h3>
+              {activeMarketingResult ? (
+                <div className="grid-2">
+                  <pre className="code-block">
+                    {JSON.stringify(
+                      {
+                        primary_text: activeMarketingResult.facebook.primary_text.en,
+                        headline: activeMarketingResult.facebook.headline.en,
+                        description: activeMarketingResult.facebook.description.en,
+                        cta_suggestion: activeMarketingResult.facebook.cta_suggestion.en,
+                      },
+                      null,
+                      2,
+                    )}
+                  </pre>
+                  <pre className="code-block">
+                    {JSON.stringify(
+                      {
+                        primary_text: activeMarketingResult.facebook.primary_text.cn,
+                        headline: activeMarketingResult.facebook.headline.cn,
+                        description: activeMarketingResult.facebook.description.cn,
+                        cta_suggestion: activeMarketingResult.facebook.cta_suggestion.cn,
+                      },
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </div>
+              ) : (
+                <div className="empty-state">暂无 Facebook 文案内容。</div>
               )}
             </div>
           </>
