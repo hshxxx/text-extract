@@ -67,6 +67,8 @@ function getEditErrorMessage(code: EditErrorCode) {
       return "文件上传失败。";
     case "DB_WRITE_FAILED":
       return "数据库写入失败。";
+    default:
+      return "图片编辑失败。";
   }
 }
 

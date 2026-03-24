@@ -318,6 +318,11 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
                 >
                   {isPending ? "处理中..." : "Generate"}
                 </button>
+                {sourceHistory.some((item) => item.frontImage) && sourceHistory.some((item) => item.backImage) ? (
+                  <Link href={`/marketing-copy?source=${selectedSource.id}`} className="ghost-button">
+                    Generate Marketing Copy
+                  </Link>
+                ) : null}
               </div>
             </div>
           ) : (
