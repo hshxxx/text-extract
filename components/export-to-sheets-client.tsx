@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { cloneQuantityTemplateTiers } from "@/lib/quantity-template-presets";
 import type {
   ExportPreviewResponse,
   ExportProductSelection,
@@ -19,10 +20,6 @@ type SelectionState = {
   quantityTemplateId: string;
   tiers: QuantityTemplateTier[];
 };
-
-function cloneTiers(tiers: QuantityTemplateTier[]) {
-  return tiers.map((item) => ({ ...item }));
-}
 
 function sanitizeError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -149,7 +146,7 @@ export function ExportToSheetsClient() {
       }
       next[product.marketingCopyVersionId] = {
         quantityTemplateId: defaultTemplate?.id ?? "",
-        tiers: cloneTiers(defaultTemplate?.tiers_json ?? []),
+        tiers: cloneQuantityTemplateTiers(defaultTemplate?.tiers_json ?? []),
       };
       return next;
     });
@@ -164,7 +161,7 @@ export function ExportToSheetsClient() {
       ...current,
       [productId]: {
         quantityTemplateId: templateId,
-        tiers: cloneTiers(template.tiers_json),
+        tiers: cloneQuantityTemplateTiers(template.tiers_json),
       },
     }));
   }
@@ -180,9 +177,9 @@ export function ExportToSheetsClient() {
     setSelectedMap((current) => {
       const currentSelection = current[productId];
       if (!currentSelection) return current;
-      const nextTiers = cloneTiers(currentSelection.tiers);
-      if (field === "optionValue") {
-        nextTiers[index].optionValue = value;
+      const nextTiers = cloneQuantityTemplateTiers(currentSelection.tiers);
+      if (field === "optionName" || field === "optionValue" || field === "variantSku") {
+        nextTiers[index][field] = value as never;
       } else {
         nextTiers[index][field] = Number(value) as never;
       }
@@ -365,7 +362,9 @@ export function ExportToSheetsClient() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
                         <tr>
-                          <th align="left">Quantity</th>
+                          <th align="left">Option1 Name</th>
+                          <th align="left">Option1 Value</th>
+                          <th align="left">Variant SKU</th>
                           <th align="left">Price</th>
                           <th align="left">Compare At</th>
                           <th align="left">Inventory</th>
@@ -376,9 +375,25 @@ export function ExportToSheetsClient() {
                           <tr key={`${product.marketingCopyVersionId}-${tier.optionValue}`}>
                             <td style={{ padding: "8px 0" }}>
                               <input
+                                value={tier.optionName}
+                                onChange={(event) =>
+                                  updateTier(product.marketingCopyVersionId, index, "optionName", event.target.value)
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
                                 value={tier.optionValue}
                                 onChange={(event) =>
                                   updateTier(product.marketingCopyVersionId, index, "optionValue", event.target.value)
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                value={tier.variantSku}
+                                onChange={(event) =>
+                                  updateTier(product.marketingCopyVersionId, index, "variantSku", event.target.value)
                                 }
                               />
                             </td>
@@ -507,7 +522,9 @@ export function ExportToSheetsClient() {
                 <tr>
                   <th align="left">Handle</th>
                   <th align="left">Title</th>
-                  <th align="left">Quantity</th>
+                  <th align="left">Option1 Name</th>
+                  <th align="left">Option1 Value</th>
+                  <th align="left">Variant SKU</th>
                   <th align="left">Price</th>
                   <th align="left">Compare At</th>
                   <th align="left">Inventory</th>
@@ -516,10 +533,12 @@ export function ExportToSheetsClient() {
               </thead>
               <tbody>
                 {preview.rows.map((row) => (
-                  <tr key={`${row.handle}-${row.option1Value}`}>
+                  <tr key={`${row.handle}-${row.option1Value}-${row.variantSku}`}>
                     <td style={{ padding: "8px 0" }}>{row.handle}</td>
                     <td>{row.title}</td>
+                    <td>{row.option1Name}</td>
                     <td>{row.option1Value}</td>
+                    <td>{row.variantSku}</td>
                     <td>{row.variantPrice}</td>
                     <td>{row.variantCompareAtPrice}</td>
                     <td>{row.variantInventoryQty}</td>

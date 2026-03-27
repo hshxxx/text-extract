@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { DEFAULT_QUANTITY_TEMPLATE_TIERS } from "@/lib/quantity-template-presets";
 import type {
   QuantityTemplateInput,
   QuantityTemplateRecord,
@@ -7,7 +8,9 @@ import type {
 } from "@/lib/types/domain";
 
 const quantityTierSchema = z.object({
+  optionName: z.string().trim().min(1).optional(),
   optionValue: z.string().trim().min(1),
+  variantSku: z.string().trim().min(1).optional(),
   price: z.coerce.number().nonnegative(),
   compareAtPrice: z.coerce.number().nonnegative(),
   inventoryQty: z.coerce.number().int().nonnegative(),
@@ -19,8 +22,19 @@ const quantityTemplateSchema = z.object({
   tiers: z.array(quantityTierSchema).min(1),
 });
 
-function normalizeTiers(value: unknown) {
-  return z.array(quantityTierSchema).parse(value) as QuantityTemplateTier[];
+export function normalizeQuantityTemplateTiers(value: unknown) {
+  return z.array(quantityTierSchema).parse(value).map((item) => {
+    const optionValue = item.optionValue.trim();
+
+    return {
+      optionName: item.optionName?.trim() || "Quantity",
+      optionValue,
+      variantSku: item.variantSku?.trim() || optionValue,
+      price: item.price,
+      compareAtPrice: item.compareAtPrice,
+      inventoryQty: item.inventoryQty,
+    } satisfies QuantityTemplateTier;
+  });
 }
 
 async function clearDefaultTemplate(supabase: SupabaseClient, userId: string) {
@@ -50,7 +64,7 @@ export async function listQuantityTemplates(supabase: SupabaseClient, userId: st
 
   return ((data ?? []) as QuantityTemplateRecord[]).map((item) => ({
     ...item,
-    tiers_json: normalizeTiers(item.tiers_json),
+    tiers_json: normalizeQuantityTemplateTiers(item.tiers_json),
   }));
 }
 
@@ -76,7 +90,7 @@ export async function getQuantityTemplateById(
 
   return {
     ...(data as QuantityTemplateRecord),
-    tiers_json: normalizeTiers(data.tiers_json),
+    tiers_json: normalizeQuantityTemplateTiers(data.tiers_json),
   };
 }
 
@@ -108,7 +122,7 @@ export async function createQuantityTemplate(
       name: normalized.name,
       is_default: normalized.isDefault,
       is_seeded: false,
-      tiers_json: normalized.tiers,
+      tiers_json: normalizeQuantityTemplateTiers(normalized.tiers),
     })
     .select("*")
     .single();
@@ -119,7 +133,7 @@ export async function createQuantityTemplate(
 
   return {
     ...(data as QuantityTemplateRecord),
-    tiers_json: normalizeTiers(data.tiers_json),
+    tiers_json: normalizeQuantityTemplateTiers(data.tiers_json),
   };
 }
 
@@ -146,7 +160,7 @@ export async function updateQuantityTemplate(
     .update({
       name: normalized.name,
       is_default: normalized.isDefault,
-      tiers_json: normalized.tiers,
+      tiers_json: normalizeQuantityTemplateTiers(normalized.tiers),
     })
     .eq("id", templateId)
     .eq("user_id", userId)
@@ -159,9 +173,11 @@ export async function updateQuantityTemplate(
 
   return {
     ...(data as QuantityTemplateRecord),
-    tiers_json: normalizeTiers(data.tiers_json),
+    tiers_json: normalizeQuantityTemplateTiers(data.tiers_json),
   };
 }
+
+export { DEFAULT_QUANTITY_TEMPLATE_TIERS };
 
 export async function deleteQuantityTemplate(
   supabase: SupabaseClient,

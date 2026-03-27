@@ -2,7 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { getAuthorizedGoogleClients } from "@/lib/services/googleOAuth";
-import { getQuantityTemplateById } from "@/lib/services/quantityTemplates";
+import {
+  getQuantityTemplateById,
+  normalizeQuantityTemplateTiers,
+} from "@/lib/services/quantityTemplates";
 import type {
   EditJobRecord,
   ExportBatchRecord,
@@ -23,20 +26,19 @@ import type {
   QuantityTemplateTier,
 } from "@/lib/types/domain";
 
+const exportSelectionTierSchema = z.object({
+  optionName: z.string().trim().min(1).optional(),
+  optionValue: z.string().trim().min(1),
+  variantSku: z.string().trim().min(1).optional(),
+  price: z.coerce.number().nonnegative(),
+  compareAtPrice: z.coerce.number().nonnegative(),
+  inventoryQty: z.coerce.number().int().nonnegative(),
+});
+
 const exportSelectionSchema = z.object({
   marketingCopyVersionId: z.string().uuid(),
   quantityTemplateId: z.string().uuid(),
-  variantOverrides: z
-    .array(
-      z.object({
-        optionValue: z.string().trim().min(1),
-        price: z.coerce.number().nonnegative(),
-        compareAtPrice: z.coerce.number().nonnegative(),
-        inventoryQty: z.coerce.number().int().nonnegative(),
-      }),
-    )
-    .optional()
-    .default([]),
+  variantOverrides: z.array(exportSelectionTierSchema).optional().default([]),
 });
 
 const exportPreviewSchema = z.object({
@@ -182,14 +184,13 @@ function convertDescriptionToBodyHtml(description: string, frontImageUrl: string
 
 function mergeTiers(
   template: QuantityTemplateRecord,
-  overrides: QuantityTemplateTier[],
+  overrides: z.infer<typeof exportSelectionTierSchema>[],
 ) {
   if (!overrides.length) {
     return template.tiers_json;
   }
 
-  const byOptionValue = new Map(overrides.map((item) => [item.optionValue, item]));
-  return template.tiers_json.map((tier) => byOptionValue.get(tier.optionValue) ?? tier);
+  return normalizeQuantityTemplateTiers(overrides);
 }
 
 async function getExportedHandles(supabase: SupabaseClient, userId: string) {
@@ -476,9 +477,9 @@ function buildPreviewFromSelections(
         tags: "",
         status: "active",
         published: "TRUE",
-        option1Name: "Quantity",
+        option1Name: tier.optionName,
         option1Value: tier.optionValue,
-        variantSku: `${handle.toUpperCase()}-${tier.optionValue.replace(/[^A-Z0-9]+/gi, "")}`,
+        variantSku: tier.variantSku,
         variantPrice: formatMoney(tier.price),
         variantCompareAtPrice: formatMoney(tier.compareAtPrice),
         variantInventoryTracker: "shopify",

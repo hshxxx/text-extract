@@ -3,22 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import {
+  cloneQuantityTemplateTiers,
+  DEFAULT_QUANTITY_TEMPLATE_TIERS,
+} from "@/lib/quantity-template-presets";
 import type { QuantityTemplateInput, QuantityTemplateRecord, QuantityTemplateTier } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
-
-const DEFAULT_TIERS: QuantityTemplateTier[] = [
-  { optionValue: "1PC", price: 11.99, compareAtPrice: 23.99, inventoryQty: 100 },
-  { optionValue: "3PCS", price: 23.99, compareAtPrice: 47.99, inventoryQty: 100 },
-  { optionValue: "5PCS", price: 35.99, compareAtPrice: 69.99, inventoryQty: 100 },
-  { optionValue: "8PCS", price: 47.99, compareAtPrice: 89.99, inventoryQty: 100 },
-  { optionValue: "10PCS", price: 59.99, compareAtPrice: 119.99, inventoryQty: 100 },
-  { optionValue: "20PCS", price: 119.99, compareAtPrice: 199.99, inventoryQty: 100 },
-  { optionValue: "30PCS", price: 179.99, compareAtPrice: 299.99, inventoryQty: 100 },
-];
-
-function cloneTiers(tiers: QuantityTemplateTier[]) {
-  return tiers.map((item) => ({ ...item }));
-}
 
 function sanitizeError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -29,7 +19,9 @@ export function QuantityTemplatesClient() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
-  const [tiers, setTiers] = useState<QuantityTemplateTier[]>(cloneTiers(DEFAULT_TIERS));
+  const [tiers, setTiers] = useState<QuantityTemplateTier[]>(
+    cloneQuantityTemplateTiers(DEFAULT_QUANTITY_TEMPLATE_TIERS),
+  );
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [pageSize, setPageSize] = useState(10);
@@ -74,7 +66,7 @@ export function QuantityTemplatesClient() {
     setEditingId(null);
     setName("");
     setIsDefault(false);
-    setTiers(cloneTiers(DEFAULT_TIERS));
+    setTiers(cloneQuantityTemplateTiers(DEFAULT_QUANTITY_TEMPLATE_TIERS));
   }
 
   function loadForEdit(item: QuantityTemplateRecord) {
@@ -84,16 +76,16 @@ export function QuantityTemplatesClient() {
     setEditingId(item.id);
     setName(item.name);
     setIsDefault(item.is_default);
-    setTiers(cloneTiers(item.tiers_json));
+    setTiers(cloneQuantityTemplateTiers(item.tiers_json));
     setMessage(null);
     setError(null);
   }
 
   function updateTier(index: number, field: keyof QuantityTemplateTier, value: string) {
     setTiers((current) => {
-      const next = cloneTiers(current);
-      if (field === "optionValue") {
-        next[index].optionValue = value;
+      const next = cloneQuantityTemplateTiers(current);
+      if (field === "optionName" || field === "optionValue" || field === "variantSku") {
+        next[index][field] = value as never;
       } else {
         next[index][field] = Number(value) as never;
       }
@@ -156,7 +148,9 @@ export function QuantityTemplatesClient() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th align="left">Quantity</th>
+                <th align="left">Option1 Name</th>
+                <th align="left">Option1 Value</th>
+                <th align="left">Variant SKU</th>
                 <th align="left">Price</th>
                 <th align="left">Compare At</th>
                 <th align="left">Inventory</th>
@@ -166,7 +160,13 @@ export function QuantityTemplatesClient() {
               {tiers.map((tier, index) => (
                 <tr key={`${tier.optionValue}-${index}`}>
                   <td style={{ padding: "8px 0" }}>
+                    <input value={tier.optionName} onChange={(event) => updateTier(index, "optionName", event.target.value)} />
+                  </td>
+                  <td>
                     <input value={tier.optionValue} onChange={(event) => updateTier(index, "optionValue", event.target.value)} />
+                  </td>
+                  <td>
+                    <input value={tier.variantSku} onChange={(event) => updateTier(index, "variantSku", event.target.value)} />
                   </td>
                   <td>
                     <input type="number" step="0.01" value={tier.price} onChange={(event) => updateTier(index, "price", event.target.value)} />
@@ -260,7 +260,7 @@ export function QuantityTemplatesClient() {
                 </div>
               </header>
               <div className="helper">
-                {item.tiers_json.map((tier) => `${tier.optionValue} / $${tier.price.toFixed(2)}`).join(" · ")}
+                {item.tiers_json.map((tier) => `${tier.optionValue} / ${tier.variantSku} / $${tier.price.toFixed(2)}`).join(" · ")}
               </div>
               {!item.is_seeded ? (
                 <div className="button-row">

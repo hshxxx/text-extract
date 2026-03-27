@@ -456,7 +456,9 @@ export type GoogleAuthStatusResponse = {
 };
 
 export type QuantityTemplateTier = {
+  optionName: string;
   optionValue: string;
+  variantSku: string;
   price: number;
   compareAtPrice: number;
   inventoryQty: number;
@@ -596,4 +598,3 @@ export type ExportHistoryDetail = {
   batch: ExportBatchRecord;
   products: ExportHistoryProductItem[];
 };
-
