@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ListControls } from "@/components/list-controls";
 import type {
   GenerateMarketingCopyRequest,
+  MarketingCopyBootstrapResponse,
   MarketingCopyResult,
   MarketingCopySourceDetail,
   MarketingCopySourceItem,
@@ -19,6 +20,24 @@ type MarketingCopyClientProps = {
   initialTemplates: MarketingCopyTemplateRecord[];
   initialSourceId: string | null;
 };
+
+const marketingBootstrapCache = new Map<string, MarketingCopyBootstrapResponse>();
+
+function getBootstrapCacheKey(sourceId: string | null) {
+  return sourceId ?? "__default__";
+}
+
+function getVersionKey(
+  sourceId: string | null,
+  frontEditJobId: string | null,
+  backEditJobId: string | null,
+) {
+  if (!sourceId || !frontEditJobId || !backEditJobId) {
+    return null;
+  }
+
+  return `${sourceId}:${frontEditJobId}:${backEditJobId}`;
+}
 
 function cloneResult(result: MarketingCopyResult) {
   return JSON.parse(JSON.stringify(result)) as MarketingCopyResult;
@@ -44,19 +63,33 @@ export function MarketingCopyClient({
   initialTemplates,
   initialSourceId,
 }: MarketingCopyClientProps) {
-  const [sources, setSources] = useState(initialSources);
-  const [templates, setTemplates] = useState(initialTemplates);
-  const [selectedSourceId, setSelectedSourceId] = useState(
-    initialSourceId && initialSources.some((item) => item.sourceImageId === initialSourceId)
+  const bootstrapCacheKey = getBootstrapCacheKey(initialSourceId);
+  const cachedBootstrap = marketingBootstrapCache.get(bootstrapCacheKey);
+  const [sources, setSources] = useState(cachedBootstrap?.sources ?? initialSources);
+  const [templates, setTemplates] = useState(cachedBootstrap?.templates ?? initialTemplates);
+  const [selectedSourceId, setSelectedSourceId] = useState(() => {
+    if (cachedBootstrap?.selectedSourceId) {
+      return cachedBootstrap.selectedSourceId;
+    }
+
+    return initialSourceId && initialSources.some((item) => item.sourceImageId === initialSourceId)
       ? initialSourceId
-      : (initialSources[0]?.sourceImageId ?? ""),
+      : (initialSources[0]?.sourceImageId ?? "");
+  });
+  const [sourceDetail, setSourceDetail] = useState<MarketingCopySourceDetail | null>(
+    cachedBootstrap?.sourceDetail ?? null,
   );
-  const [sourceDetail, setSourceDetail] = useState<MarketingCopySourceDetail | null>(null);
-  const [selectedFrontEditJobId, setSelectedFrontEditJobId] = useState("");
-  const [selectedBackEditJobId, setSelectedBackEditJobId] = useState("");
-  const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplates[0]?.id ?? "");
+  const [selectedFrontEditJobId, setSelectedFrontEditJobId] = useState(
+    cachedBootstrap?.sourceDetail?.defaultFrontEditJobId ?? "",
+  );
+  const [selectedBackEditJobId, setSelectedBackEditJobId] = useState(
+    cachedBootstrap?.sourceDetail?.defaultBackEditJobId ?? "",
+  );
+  const [selectedTemplateId, setSelectedTemplateId] = useState(
+    cachedBootstrap?.templates[0]?.id ?? initialTemplates[0]?.id ?? "",
+  );
   const [userInstruction, setUserInstruction] = useState("");
-  const [versions, setVersions] = useState<MarketingCopyVersionListItem[]>([]);
+  const [versions, setVersions] = useState<MarketingCopyVersionListItem[]>(cachedBootstrap?.versions ?? []);
   const [activeVersionId, setActiveVersionId] = useState<string | null>(null);
   const [activeVersion, setActiveVersion] = useState<MarketingCopyVersionDetail | null>(null);
   const [editableResult, setEditableResult] = useState<MarketingCopyResult | null>(null);
@@ -71,7 +104,52 @@ export function MarketingCopyClient({
   const [error, setError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedBootstrap);
+  const [hydratedSourceId, setHydratedSourceId] = useState<string | null>(
+    cachedBootstrap?.sourceDetail?.sourceImageId ?? null,
+  );
+  const [hydratedVersionKey, setHydratedVersionKey] = useState<string | null>(() =>
+    getVersionKey(
+      cachedBootstrap?.selectedSourceId ?? null,
+      cachedBootstrap?.sourceDetail?.defaultFrontEditJobId ?? null,
+      cachedBootstrap?.sourceDetail?.defaultBackEditJobId ?? null,
+    ),
+  );
   const [isPending, startTransition] = useTransition();
+
+  function applyBootstrapPayload(data: MarketingCopyBootstrapResponse) {
+    const nextSources = data.sources ?? [];
+    const nextTemplates = data.templates ?? [];
+    const nextSelectedSourceId = data.selectedSourceId ?? "";
+    const nextSourceDetail = data.sourceDetail ?? null;
+    const nextVersions = data.versions ?? [];
+
+    setSources(nextSources);
+    setTemplates(nextTemplates);
+    setBootstrapError(null);
+    setSelectedSourceId(nextSelectedSourceId);
+    setSourceDetail(nextSourceDetail);
+    setVersions(nextVersions);
+    setSourcePage(1);
+    setVersionPage(1);
+    setActiveVersionId(null);
+    setActiveVersion(null);
+    setEditableResult(null);
+    setSelectedFrontEditJobId(nextSourceDetail?.defaultFrontEditJobId ?? "");
+    setSelectedBackEditJobId(nextSourceDetail?.defaultBackEditJobId ?? "");
+    setHydratedSourceId(nextSourceDetail?.sourceImageId ?? null);
+    setHydratedVersionKey(
+      getVersionKey(
+        nextSelectedSourceId || null,
+        nextSourceDetail?.defaultFrontEditJobId ?? null,
+        nextSourceDetail?.defaultBackEditJobId ?? null,
+      ),
+    );
+
+    setSelectedTemplateId((current) =>
+      nextTemplates.some((item) => item.id === current) ? current : (nextTemplates[0]?.id ?? ""),
+    );
+  }
 
   const filteredSources = useMemo(() => {
     const query = normalizeSearchQuery(sourceQuery);
@@ -126,59 +204,46 @@ export function MarketingCopyClient({
 
     async function bootstrap() {
       try {
-        const [sourcesResponse, templatesResponse] = await Promise.all([
-          fetch("/api/marketing-copy/sources"),
-          fetch("/api/marketing-copy/templates"),
-        ]);
-
-        const sourcesData = (await sourcesResponse.json()) as {
-          items?: MarketingCopySourceItem[];
-          error?: string;
-        };
-        const templatesData = (await templatesResponse.json()) as {
-          items?: MarketingCopyTemplateRecord[];
-          error?: string;
-        };
-
-        if (!sourcesResponse.ok) {
-          throw new Error(sourcesData.error ?? "获取营销素材失败。");
+        const searchParams = new URLSearchParams();
+        if (initialSourceId) {
+          searchParams.set("source", initialSourceId);
         }
-        if (!templatesResponse.ok) {
-          throw new Error(templatesData.error ?? "获取文案模板失败。");
+        const query = searchParams.toString();
+        const response = await fetch(`/api/marketing-copy/bootstrap${query ? `?${query}` : ""}`);
+        const data = (await response.json()) as MarketingCopyBootstrapResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "初始化营销文案页面失败。");
         }
 
         if (!active) return;
 
-        const nextSources = sourcesData.items ?? [];
-        const nextTemplates = templatesData.items ?? [];
-        setSources(nextSources);
-        setTemplates(nextTemplates);
-        setBootstrapError(null);
-
-        if (
-          initialSourceId &&
-          nextSources.some((item) => item.sourceImageId === initialSourceId)
-        ) {
-          setSelectedSourceId(initialSourceId);
-        } else if (!nextSources.some((item) => item.sourceImageId === selectedSourceId)) {
-          setSelectedSourceId(nextSources[0]?.sourceImageId ?? "");
-        }
-
-        if (!nextTemplates.some((item) => item.id === selectedTemplateId)) {
-          setSelectedTemplateId(nextTemplates[0]?.id ?? "");
-        }
+        marketingBootstrapCache.set(bootstrapCacheKey, data);
+        applyBootstrapPayload(data);
       } catch (loadError) {
         if (!active) return;
         setBootstrapError(loadError instanceof Error ? loadError.message : "初始化营销文案页面失败。");
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
       }
     }
 
-    void bootstrap();
+    const cachedData = marketingBootstrapCache.get(bootstrapCacheKey);
+
+    if (cachedData) {
+      applyBootstrapPayload(cachedData);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [bootstrapCacheKey, initialSourceId]);
 
   useEffect(() => {
     if (!filteredSources.some((item) => item.sourceImageId === selectedSourceId)) {
@@ -193,6 +258,12 @@ export function MarketingCopyClient({
       setActiveVersion(null);
       setActiveVersionId(null);
       setEditableResult(null);
+      setHydratedSourceId(null);
+      setHydratedVersionKey(null);
+      return;
+    }
+
+    if (hydratedSourceId === selectedSourceId) {
       return;
     }
 
@@ -205,6 +276,7 @@ export function MarketingCopyClient({
         setActiveVersionId(null);
         setActiveVersion(null);
         setEditableResult(null);
+        setHydratedVersionKey(null);
         const response = await fetch(`/api/marketing-copy/source/${selectedSourceId}`);
         const data = (await response.json()) as { item?: MarketingCopySourceDetail; error?: string };
 
@@ -219,6 +291,7 @@ export function MarketingCopyClient({
         setSelectedFrontEditJobId(item?.defaultFrontEditJobId ?? "");
         setSelectedBackEditJobId(item?.defaultBackEditJobId ?? "");
         setVersions([]);
+        setHydratedSourceId(selectedSourceId);
       } catch (loadError) {
         if (!active) return;
         setSourceDetail(null);
@@ -231,12 +304,19 @@ export function MarketingCopyClient({
     return () => {
       active = false;
     };
-  }, [selectedSourceId]);
+  }, [hydratedSourceId, selectedSourceId]);
 
   useEffect(() => {
     if (!selectedSourceId || !selectedFrontEditJobId || !selectedBackEditJobId) {
       setVersions([]);
       setVersionPage(1);
+      setHydratedVersionKey(null);
+      return;
+    }
+
+    const versionKey = getVersionKey(selectedSourceId, selectedFrontEditJobId, selectedBackEditJobId);
+
+    if (hydratedVersionKey === versionKey) {
       return;
     }
 
@@ -259,6 +339,7 @@ export function MarketingCopyClient({
         if (!active) return;
         setVersions(data.items ?? []);
         setVersionPage(1);
+        setHydratedVersionKey(versionKey);
       } catch (loadError) {
         if (!active) return;
         setVersions([]);
@@ -271,7 +352,7 @@ export function MarketingCopyClient({
     return () => {
       active = false;
     };
-  }, [selectedBackEditJobId, selectedFrontEditJobId, selectedSourceId]);
+  }, [hydratedVersionKey, selectedBackEditJobId, selectedFrontEditJobId, selectedSourceId]);
 
   async function loadVersionDetail(id: string) {
     const response = await fetch(`/api/marketing-copy/${id}`);
@@ -348,6 +429,12 @@ export function MarketingCopyClient({
           <p>基于主题原文、双面商品图与预置模板，生成双语 Shopify 商品文案和 Facebook 广告文案。</p>
         </div>
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
         {sources.length === 0 ? (
           <div className="empty-state">
             <p>还没有满足条件的素材。先完成图片编辑，并确保至少有一张 Front 和一张 Back 成品图。</p>

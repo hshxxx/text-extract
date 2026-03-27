@@ -1,7 +1,29 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { processImageEditingTask, runImageEditing } from "@/lib/services/imageEditing";
+import {
+  listEditableImagesForEditing,
+  processImageEditingTask,
+  runImageEditing,
+} from "@/lib/services/imageEditing";
 import type { CreateEditTaskRequest } from "@/lib/types/domain";
 import { jsonError, jsonOk } from "@/utils/http";
+
+export async function GET() {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return jsonError("未登录。", 401);
+    }
+
+    const items = await listEditableImagesForEditing(supabase, user.id);
+    return jsonOk({ items });
+  } catch (error) {
+    return jsonError(error instanceof Error ? error.message : "获取可编辑来源图失败。", 500);
+  }
+}
 
 export async function POST(request: Request) {
   try {

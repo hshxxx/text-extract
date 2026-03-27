@@ -4,7 +4,15 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export function LoginForm({ next = "/extract" }: { next?: string }) {
+export function LoginForm({
+  next = "/extract",
+  supabaseConfigured = true,
+  configurationMessage,
+}: {
+  next?: string;
+  supabaseConfigured?: boolean;
+  configurationMessage?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -46,6 +54,11 @@ export function LoginForm({ next = "/extract" }: { next?: string }) {
         event.preventDefault();
         setMessage(null);
         setError(null);
+
+        if (!supabaseConfigured) {
+          setError(configurationMessage ?? "当前环境缺少 Supabase 配置，暂时无法发送 Magic Link。");
+          return;
+        }
 
         startTransition(async () => {
           try {
@@ -89,10 +102,15 @@ export function LoginForm({ next = "/extract" }: { next?: string }) {
         />
       </div>
       <div className="button-row">
-        <button type="submit" className="primary-button" disabled={isPending}>
+        <button type="submit" className="primary-button" disabled={isPending || !supabaseConfigured}>
           {isPending ? "发送中..." : "发送 Magic Link"}
         </button>
       </div>
+      {!supabaseConfigured ? (
+        <p className="error-text">
+          {configurationMessage ?? "当前 worktree 缺少 .env.local 或 Supabase 环境变量未加载。"}
+        </p>
+      ) : null}
       {message ? <p className="helper">{message}</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
     </form>

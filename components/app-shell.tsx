@@ -1,9 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { LogoutButton } from "@/components/logout-button";
+import { useAppSession } from "@/components/session-shell";
 
 type AppShellProps = {
-  activePath: string;
-  userEmail?: string | null;
   children: React.ReactNode;
 };
 
@@ -18,7 +20,15 @@ const NAV_ITEMS = [
   { href: "/history", label: "历史记录" },
 ];
 
-export function AppShell({ activePath, userEmail, children }: AppShellProps) {
+function isActivePath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { userEmail } = useAppSession();
+
   return (
     <div className="page-shell">
       <header className="app-header">
@@ -32,7 +42,10 @@ export function AppShell({ activePath, userEmail, children }: AppShellProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={activePath === item.href ? "nav-link-active" : "nav-link"}
+                prefetch
+                className={isActivePath(pathname, item.href) ? "nav-link-active" : "nav-link"}
+                onMouseEnter={() => router.prefetch(item.href)}
+                onFocus={() => router.prefetch(item.href)}
               >
                 {item.label}
               </Link>

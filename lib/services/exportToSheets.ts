@@ -68,12 +68,15 @@ const MATRIXIFY_HEADERS = [
 
 type ResolvedExportSelection = {
   version: MarketingCopyVersionRecord;
-  template: MarketingCopyTemplateRecord | null;
-  frontJob: EditJobRecord;
-  backJob: EditJobRecord;
+  template: ExportTemplateSummary | null;
+  frontJob: ExportEditJobSummary;
+  backJob: ExportEditJobSummary;
   quantityTemplate: QuantityTemplateRecord;
   tiers: QuantityTemplateTier[];
 };
+
+type ExportTemplateSummary = Pick<MarketingCopyTemplateRecord, "id" | "name">;
+type ExportEditJobSummary = Pick<EditJobRecord, "id" | "image_url">;
 
 function getShanghaiDateString(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -236,12 +239,12 @@ async function getTemplatesById(
   ids: string[],
 ) {
   if (ids.length === 0) {
-    return new Map<string, MarketingCopyTemplateRecord>();
+    return new Map<string, ExportTemplateSummary>();
   }
 
   const { data, error } = await supabase
     .from("marketing_copy_templates")
-    .select("*")
+    .select("id, name")
     .in("id", ids);
 
   if (error) {
@@ -249,21 +252,24 @@ async function getTemplatesById(
   }
 
   return new Map(
-    ((data ?? []) as MarketingCopyTemplateRecord[]).map((item) => [item.id, item]),
+    ((data ?? []) as ExportTemplateSummary[]).map((item) => [item.id, item]),
   );
 }
 
 async function getEditJobsById(supabase: SupabaseClient, ids: string[]) {
   if (ids.length === 0) {
-    return new Map<string, EditJobRecord>();
+    return new Map<string, ExportEditJobSummary>();
   }
 
-  const { data, error } = await supabase.from("edit_jobs").select("*").in("id", ids);
+  const { data, error } = await supabase
+    .from("edit_jobs")
+    .select("id, image_url")
+    .in("id", ids);
   if (error) {
     throw new Error(`读取图片编辑结果失败：${error.message}`);
   }
 
-  return new Map(((data ?? []) as EditJobRecord[]).map((item) => [item.id, item]));
+  return new Map(((data ?? []) as ExportEditJobSummary[]).map((item) => [item.id, item]));
 }
 
 async function getConfirmedMarketingVersions(
@@ -274,7 +280,9 @@ async function getConfirmedMarketingVersions(
 ) {
   let query = supabase
     .from("marketing_copy_versions")
-    .select("*")
+    .select(
+      "id, image_generation_result_id, front_edit_job_id, back_edit_job_id, marketing_copy_template_id, draft_result_json, final_result_json, is_confirmed, created_at, updated_at",
+    )
     .eq("user_id", userId)
     .eq("is_confirmed", true)
     .order("updated_at", { ascending: false });
@@ -318,9 +326,9 @@ async function getMarketingVersionsByIds(
 
 function buildExportableProductItem(
   version: MarketingCopyVersionRecord,
-  template: MarketingCopyTemplateRecord | null,
-  frontJob: EditJobRecord | null,
-  backJob: EditJobRecord | null,
+  template: ExportTemplateSummary | null,
+  frontJob: ExportEditJobSummary | null,
+  backJob: ExportEditJobSummary | null,
 ) {
   if (!frontJob?.image_url || !backJob?.image_url) {
     return null;
@@ -346,7 +354,7 @@ function buildExportableProductItem(
 export async function listExportableProducts(
   supabase: SupabaseClient,
   userId: string,
-  limit = 100,
+  limit = 20,
 ) {
   const versions = await getConfirmedMarketingVersions(supabase, userId, undefined, limit);
   const templatesById = await getTemplatesById(
@@ -629,9 +637,10 @@ export async function exportProductsToGoogleSheets(
 export async function listExportHistory(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("export_batches")
-    .select("*")
+    .select("id, batch_name, sheet_url, product_count, created_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) {
     throw new Error(`获取导出历史失败：${error.message}`);

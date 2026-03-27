@@ -1,25 +1,28 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
 import type {
-  ImageModelConfigRecord,
-  ModelConfigRecord,
+  ModelSettingsBootstrapResponse,
   Provider,
   ImageProvider,
+  SafeImageModelConfigRecord,
+  SafeModelConfigRecord,
 } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
-type SafeTextModelConfig = Omit<ModelConfigRecord, "api_key_encrypted">;
-type SafeImageModelConfig = Omit<ImageModelConfigRecord, "api_key_encrypted">;
-
 type ModelSettingsClientProps = {
-  initialTextModels: SafeTextModelConfig[];
-  initialImageModels: SafeImageModelConfig[];
+  initialTextModels: SafeModelConfigRecord[];
+  initialImageModels: SafeImageModelConfigRecord[];
   suggestedTextModel: string;
   suggestedImageModel: string;
   suggestedBaseUrl: string;
 };
+
+let cachedModelSettingsBootstrap: {
+  textItems: SafeModelConfigRecord[];
+  imageItems: SafeImageModelConfigRecord[];
+} | null = null;
 
 function sanitizeError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -32,8 +35,8 @@ export function ModelSettingsClient({
   suggestedImageModel,
   suggestedBaseUrl,
 }: ModelSettingsClientProps) {
-  const [textItems, setTextItems] = useState(initialTextModels);
-  const [imageItems, setImageItems] = useState(initialImageModels);
+  const [textItems, setTextItems] = useState(() => cachedModelSettingsBootstrap?.textItems ?? initialTextModels);
+  const [imageItems, setImageItems] = useState(() => cachedModelSettingsBootstrap?.imageItems ?? initialImageModels);
   const [textEditingId, setTextEditingId] = useState<string | null>(null);
   const [imageEditingId, setImageEditingId] = useState<string | null>(null);
   const [textName, setTextName] = useState("");
@@ -50,6 +53,7 @@ export function ModelSettingsClient({
   const [imageMessage, setImageMessage] = useState<string | null>(null);
   const [textError, setTextError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [textQuery, setTextQuery] = useState("");
   const [imageQuery, setImageQuery] = useState("");
   const [textFilter, setTextFilter] = useState("all");
@@ -58,9 +62,61 @@ export function ModelSettingsClient({
   const [imagePageSize, setImagePageSize] = useState(10);
   const [textPage, setTextPage] = useState(1);
   const [imagePage, setImagePage] = useState(1);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedModelSettingsBootstrap);
   const [isPending, startTransition] = useTransition();
   const textProvider: Provider = "openai";
   const imageProvider: ImageProvider = "openai";
+
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const response = await fetch("/api/model-settings/bootstrap");
+        const data = (await response.json()) as ModelSettingsBootstrapResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "初始化模型配置页面失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const next = {
+          textItems: data.textItems ?? [],
+          imageItems: data.imageItems ?? [],
+        };
+
+        cachedModelSettingsBootstrap = next;
+        setTextItems(next.textItems);
+        setImageItems(next.imageItems);
+        setBootstrapError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setBootstrapError(sanitizeError(loadError, "初始化模型配置页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    if (cachedModelSettingsBootstrap) {
+      setTextItems(cachedModelSettingsBootstrap.textItems);
+      setImageItems(cachedModelSettingsBootstrap.imageItems);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filteredTextItems = useMemo(() => {
     const query = normalizeSearchQuery(textQuery);
@@ -121,6 +177,10 @@ export function ModelSettingsClient({
       throw new Error(data.error ?? "刷新文本模型配置失败。");
     }
 
+    cachedModelSettingsBootstrap = {
+      textItems: data.items,
+      imageItems: cachedModelSettingsBootstrap?.imageItems ?? imageItems,
+    };
     setTextItems(data.items);
   }
 
@@ -132,6 +192,10 @@ export function ModelSettingsClient({
       throw new Error(data.error ?? "刷新图片模型配置失败。");
     }
 
+    cachedModelSettingsBootstrap = {
+      textItems: cachedModelSettingsBootstrap?.textItems ?? textItems,
+      imageItems: data.items,
+    };
     setImageItems(data.items);
   }
 
@@ -217,6 +281,13 @@ export function ModelSettingsClient({
             <h1>文本模型配置</h1>
             <p>用于固定 Schema 文本提取。保存前会执行真实连接测试，API Key 仅在服务端加密保存。</p>
           </div>
+          {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+          {isBootstrapping ? (
+            <div className="stack" style={{ marginBottom: 16 }}>
+              <div className="skeleton-line skeleton-heading" />
+              <div className="skeleton-card" />
+            </div>
+          ) : null}
           <div className="field">
             <label htmlFor="textModelName">名称</label>
             <input id="textModelName" value={textName} onChange={(event) => setTextName(event.target.value)} />

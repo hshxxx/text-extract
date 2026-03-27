@@ -7,7 +7,12 @@ import {
   cloneQuantityTemplateTiers,
   DEFAULT_QUANTITY_TEMPLATE_TIERS,
 } from "@/lib/quantity-template-presets";
-import type { QuantityTemplateInput, QuantityTemplateRecord, QuantityTemplateTier } from "@/lib/types/domain";
+import type {
+  QuantityTemplateInput,
+  QuantityTemplateRecord,
+  QuantityTemplateTier,
+  QuantityTemplatesBootstrapResponse,
+} from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
 function sanitizeError(error: unknown, fallback: string) {
@@ -28,19 +33,22 @@ export function QuantityTemplatesClient() {
   const [page, setPage] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   async function refreshItems() {
-    const response = await fetch("/api/quantity-templates");
-    const data = (await response.json()) as { items?: QuantityTemplateRecord[]; error?: string };
+    const response = await fetch("/api/quantity-templates/bootstrap");
+    const data = (await response.json()) as QuantityTemplatesBootstrapResponse & { error?: string };
     if (!response.ok) {
-      throw new Error(data.error ?? "获取数量模板失败。");
+      throw new Error(data.error ?? "初始化数量模板页面失败。");
     }
     setItems(data.items ?? []);
   }
 
   useEffect(() => {
-    void refreshItems().catch((loadError) => setError(sanitizeError(loadError, "初始化数量模板失败。")));
+    void refreshItems()
+      .catch((loadError) => setError(sanitizeError(loadError, "初始化数量模板失败。")))
+      .finally(() => setIsBootstrapping(false));
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -211,6 +219,12 @@ export function QuantityTemplatesClient() {
       </section>
 
       <section className="panel">
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
         <div className="split-header">
           <h2>已有数量模板</h2>
           <Link href="/export-to-sheets" className="ghost-button">

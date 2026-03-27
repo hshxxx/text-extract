@@ -19,6 +19,12 @@ type EditImageClientProps = {
 
 type EditResultState = CreateEditTaskResponse | EditTaskDetailResponse | RetryEditJobResponse;
 
+let cachedEditSources: EditableImageListItem[] | null = null;
+
+function sanitizeError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function isTaskProcessing(status: string | null) {
   return (
     status === "splitting" ||
@@ -44,11 +50,11 @@ function formatEditErrorCode(code: string | null | undefined) {
 }
 
 export function EditImageClient({ initialSources, initialSourceId }: EditImageClientProps) {
-  const [sources, setSources] = useState(initialSources);
+  const [sources, setSources] = useState(() => cachedEditSources ?? initialSources);
   const [selectedSourceId, setSelectedSourceId] = useState(
-    initialSourceId && initialSources.some((item) => item.id === initialSourceId)
+    initialSourceId && (cachedEditSources ?? initialSources).some((item) => item.id === initialSourceId)
       ? initialSourceId
-      : (initialSources[0]?.id ?? ""),
+      : ((cachedEditSources ?? initialSources)[0]?.id ?? ""),
   );
   const [sourceQuery, setSourceQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -56,10 +62,64 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
   const [sourcePage, setSourcePage] = useState(1);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [result, setResult] = useState<EditResultState | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sourceHistory, setSourceHistory] = useState<EditHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedEditSources);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const response = await fetch("/api/edit-image");
+        const data = (await response.json()) as { items?: EditableImageListItem[]; error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "获取可编辑来源图失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const nextSources = data.items ?? [];
+        cachedEditSources = nextSources;
+        setSources(nextSources);
+        setSelectedSourceId((current) =>
+          nextSources.some((item) => item.id === current)
+            ? current
+            : (initialSourceId && nextSources.some((item) => item.id === initialSourceId)
+                ? initialSourceId
+                : (nextSources[0]?.id ?? "")),
+        );
+        setBootstrapError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setBootstrapError(sanitizeError(loadError, "初始化图片编辑页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    if (cachedEditSources) {
+      setSources(cachedEditSources);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [initialSourceId]);
 
   const selectedSource = useMemo(
     () => sources.find((item) => item.id === selectedSourceId) ?? null,
@@ -215,7 +275,14 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
           <h1>图片编辑</h1>
           <p>基于图片生成结果自动拆分正反面，生成两张适合商品展示的纪念币成品图。</p>
         </div>
-        {sources.length === 0 ? (
+        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
+        {sources.length === 0 && !isBootstrapping ? (
           <div className="empty-state">
             <p>还没有可编辑的来源图片。先去图片生成页产出一张白底双币图。</p>
             <Link href="/generate-image" className="primary-button">

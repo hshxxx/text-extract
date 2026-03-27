@@ -30,6 +30,8 @@ export type ModelConfigRecord = {
   updated_at: string;
 };
 
+export type SafeModelConfigRecord = Omit<ModelConfigRecord, "api_key_encrypted">;
+
 export type ModelConfigInput = {
   name: string;
   provider: Provider;
@@ -107,6 +109,8 @@ export type ImageModelConfigRecord = {
   created_at: string;
   updated_at: string;
 };
+
+export type SafeImageModelConfigRecord = Omit<ImageModelConfigRecord, "api_key_encrypted">;
 
 export type ImageModelConfigInput = {
   name: string;
@@ -597,4 +601,52 @@ export type ExportHistoryProductItem = {
 export type ExportHistoryDetail = {
   batch: ExportBatchRecord;
   products: ExportHistoryProductItem[];
+};
+
+export type HistoryTab = "text" | "image" | "edit" | "marketing" | "export";
+
+export type HistoryBootstrapResponse = {
+  tab: HistoryTab;
+  textItems?: ExtractionJobRecord[];
+  imageItems?: ImageHistoryItem[];
+  editItems?: EditHistoryItem[];
+  marketingItems?: MarketingCopyHistoryItem[];
+  exportItems?: ExportHistoryItem[];
+};
+
+export type ExportBootstrapResponse = {
+  products: ExportableProductItem[];
+  templates: QuantityTemplateRecord[];
+};
+
+export type SessionResponse = {
+  authenticated: boolean;
+  userEmail: string | null;
+};
+
+export type ExtractBootstrapResponse = {
+  models: SafeModelConfigRecord[];
+  templates: TemplateRecord[];
+};
+
+export type GenerateImageBootstrapResponse = {
+  prompts: ExtractionResultListItem[];
+  imageModels: SafeImageModelConfigRecord[];
+};
+
+export type ModelSettingsBootstrapResponse = {
+  textItems: SafeModelConfigRecord[];
+  imageItems: SafeImageModelConfigRecord[];
+};
+
+export type MarketingCopyBootstrapResponse = {
+  sources: MarketingCopySourceItem[];
+  templates: MarketingCopyTemplateRecord[];
+  selectedSourceId: string | null;
+  sourceDetail: MarketingCopySourceDetail | null;
+  versions: MarketingCopyVersionListItem[];
+};
+
+export type QuantityTemplatesBootstrapResponse = {
+  items: QuantityTemplateRecord[];
 };

@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireApiUser } from "@/lib/api-auth";
 import { createModelConfig, listModelConfigs } from "@/lib/services/models";
 import type { ModelConfigInput } from "@/lib/types/domain";
 import { jsonError, jsonOk } from "@/utils/http";
@@ -10,10 +10,7 @@ function sanitizeModelConfig(record: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await requireApiUser();
 
     if (!user) {
       return jsonError("未登录。", 401);
@@ -28,10 +25,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await requireApiUser();
 
     if (!user) {
       return jsonError("未登录。", 401);

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getSupabaseServerConfig } from "@/lib/supabase/config";
 
 type CookieToSet = {
   name: string;
@@ -9,12 +10,7 @@ type CookieToSet = {
 
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !anonKey) {
-    throw new Error("缺少 Supabase 服务端环境变量配置。");
-  }
+  const { url, anonKey } = getSupabaseServerConfig();
 
   return createServerClient(url, anonKey, {
     cookies: {

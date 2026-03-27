@@ -244,6 +244,55 @@ button {
   gap: 16px;
 }
 
+.skeleton-line,
+.skeleton-card,
+.skeleton-pill {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--line);
+}
+
+.skeleton-line::after,
+.skeleton-card::after,
+.skeleton-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 999px;
+}
+
+.skeleton-title {
+  width: 220px;
+  height: 24px;
+}
+
+.skeleton-heading {
+  width: 180px;
+}
+
+.skeleton-subtitle {
+  width: min(420px, 100%);
+}
+
+.skeleton-card {
+  min-height: 120px;
+  border-radius: 18px;
+}
+
+.skeleton-pill {
+  width: 92px;
+  height: 42px;
+  border-radius: 999px;
+}
+
 .list-card {
   padding: 18px;
   border: 1px solid var(--line);
@@ -362,5 +411,11 @@ button {
   .app-header {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    transform: translateX(100%);
   }
 }

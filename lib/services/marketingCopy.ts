@@ -595,7 +595,7 @@ export async function listEligibleMarketingCopySources(
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 50) : 50;
   const { data: imageTasks, error: taskError } = await supabase
     .from("image_generation_tasks")
-    .select("*")
+    .select("id, extraction_job_id, created_at")
     .eq("user_id", userId)
     .eq("status", "success")
     .order("created_at", { ascending: false })
@@ -612,7 +612,7 @@ export async function listEligibleMarketingCopySources(
 
   const { data: results, error: resultError } = await supabase
     .from("image_generation_results")
-    .select("*")
+    .select("id, task_id, image_url, created_at")
     .in("task_id", taskList.map((task) => task.id));
 
   if (resultError) {
@@ -626,7 +626,7 @@ export async function listEligibleMarketingCopySources(
 
   const { data: extractionJobs, error: extractionError } = await supabase
     .from("extraction_jobs")
-    .select("*")
+    .select("id, raw_input, final_prompt")
     .in(
       "id",
       taskList.map((task) => task.extraction_job_id),
@@ -642,7 +642,7 @@ export async function listEligibleMarketingCopySources(
 
   const { data: editTasks, error: editTaskError } = await supabase
     .from("edit_tasks")
-    .select("*")
+    .select("id, source_image_id")
     .eq("user_id", userId)
     .in(
       "source_image_id",
@@ -660,7 +660,7 @@ export async function listEligibleMarketingCopySources(
   if (taskIds.length > 0) {
     const { data: editJobs, error: editJobsError } = await supabase
       .from("edit_jobs")
-      .select("*")
+      .select("id, task_id, side, image_url, created_at")
       .in("task_id", taskIds)
       .eq("status", "success")
       .not("image_url", "is", null)
@@ -715,8 +715,10 @@ export async function getMarketingCopySourceDetail(
   userId: string,
   sourceImageId: string,
 ) {
-  const bundle = await resolveSourceBundle(supabase, userId, sourceImageId);
-  const jobs = await listSuccessfulEditJobsForSource(supabase, userId, sourceImageId);
+  const [bundle, jobs] = await Promise.all([
+    resolveSourceBundle(supabase, userId, sourceImageId),
+    listSuccessfulEditJobsForSource(supabase, userId, sourceImageId),
+  ]);
   const frontOptions = jobs
     .filter((job) => job.side === "front")
     .map((job) => ({

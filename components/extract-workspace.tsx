@@ -2,24 +2,49 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
-import type { ExtractionResponse, ModelConfigRecord, StructuredData, TemplateRecord } from "@/lib/types/domain";
+import type {
+  ExtractBootstrapResponse,
+  ExtractionResponse,
+  SafeModelConfigRecord,
+  StructuredData,
+  TemplateRecord,
+} from "@/lib/types/domain";
 import { FIXED_SCHEMA_FIELDS } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 import { MAX_INPUT_LENGTH } from "@/utils/constants";
 
 type ExtractWorkspaceProps = {
-  models: Array<Omit<ModelConfigRecord, "api_key_encrypted">>;
+  models: SafeModelConfigRecord[];
   templates: TemplateRecord[];
 };
 
+type ExtractBootstrapState = {
+  models: SafeModelConfigRecord[];
+  templates: TemplateRecord[];
+};
+
+let cachedExtractBootstrap: ExtractBootstrapState | null = null;
+
+function sanitizeError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
+  const [modelItems, setModelItems] = useState<SafeModelConfigRecord[]>(
+    () => cachedExtractBootstrap?.models ?? models,
+  );
+  const [templateItems, setTemplateItems] = useState<TemplateRecord[]>(
+    () => cachedExtractBootstrap?.templates ?? templates,
+  );
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedExtractBootstrap);
   const defaultModelId = useMemo(
-    () => models.find((item) => item.is_default)?.id ?? models[0]?.id ?? "",
-    [models],
+    () => modelItems.find((item) => item.is_default)?.id ?? modelItems[0]?.id ?? "",
+    [modelItems],
   );
   const defaultTemplateId = useMemo(
-    () => templates.find((item) => item.is_default)?.id ?? templates[0]?.id ?? "",
-    [templates],
+    () => templateItems.find((item) => item.is_default)?.id ?? templateItems[0]?.id ?? "",
+    [templateItems],
   );
 
   const [rawInput, setRawInput] = useState("");
@@ -37,9 +62,60 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const response = await fetch("/api/extract/bootstrap");
+        const data = (await response.json()) as ExtractBootstrapResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "初始化文本解析页面失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const next = {
+          models: data.models ?? [],
+          templates: data.templates ?? [],
+        } satisfies ExtractBootstrapState;
+
+        cachedExtractBootstrap = next;
+        setModelItems(next.models);
+        setTemplateItems(next.templates);
+        setBootstrapError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setBootstrapError(sanitizeError(loadError, "初始化文本解析页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    if (cachedExtractBootstrap) {
+      setModelItems(cachedExtractBootstrap.models);
+      setTemplateItems(cachedExtractBootstrap.templates);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filteredModels = useMemo(() => {
     const query = normalizeSearchQuery(modelQuery);
-    return models.filter((item) => {
+    return modelItems.filter((item) => {
       if (modelFilter === "default" && !item.is_default) return false;
       if (modelFilter === "non_default" && item.is_default) return false;
       if (!query) return true;
@@ -47,18 +123,18 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
         value.toLowerCase().includes(query),
       );
     });
-  }, [models, modelFilter, modelQuery]);
+  }, [modelItems, modelFilter, modelQuery]);
 
   const filteredTemplates = useMemo(() => {
     const query = normalizeSearchQuery(templateQuery);
-    return templates.filter((item) => {
+    return templateItems.filter((item) => {
       if (templateFilter === "default" && !item.is_default) return false;
       if (templateFilter === "seeded" && !item.is_seeded) return false;
       if (templateFilter === "custom" && item.is_seeded) return false;
       if (!query) return true;
       return [item.name, item.content].some((value) => value.toLowerCase().includes(query));
     });
-  }, [templateFilter, templateQuery, templates]);
+  }, [templateFilter, templateItems, templateQuery]);
 
   const pagedModels = useMemo(
     () => paginateItems(filteredModels, modelPage, modelPageSize),
@@ -96,10 +172,17 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
           <h1>固定 Schema 文本解析</h1>
           <p>输入原始需求，系统将提取 7 个标准字段，再按模板渲染最终 Prompt。</p>
         </div>
-        {models.length === 0 ? (
+        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
+        {modelItems.length === 0 && !isBootstrapping ? (
           <div className="empty-state">请先到模型配置页添加 OpenAI 兼容模型配置。</div>
         ) : null}
-        {templates.length === 0 ? (
+        {templateItems.length === 0 && !isBootstrapping ? (
           <div className="empty-state">请先到模板管理页创建模板。</div>
         ) : null}
         <div className="field">

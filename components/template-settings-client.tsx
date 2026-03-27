@@ -1,25 +1,77 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
 import type { TemplateRecord } from "@/lib/types/domain";
 import { FIXED_SCHEMA_FIELDS } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 import { extractTemplatePlaceholders } from "@/utils/templateValidation";
 
+let cachedTemplateItems: TemplateRecord[] | null = null;
+
+function sanitizeError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function TemplateSettingsClient({ initialItems }: { initialItems: TemplateRecord[] }) {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState(() => cachedTemplateItems ?? initialItems);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedTemplateItems);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const response = await fetch("/api/templates");
+        const data = (await response.json()) as { items?: TemplateRecord[]; error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "获取模板失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        cachedTemplateItems = data.items ?? [];
+        setItems(cachedTemplateItems);
+        setBootstrapError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setBootstrapError(sanitizeError(loadError, "初始化模板页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    if (cachedTemplateItems) {
+      setItems(cachedTemplateItems);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const placeholders = useMemo(() => extractTemplatePlaceholders(content), [content]);
   const filteredItems = useMemo(() => {
@@ -47,6 +99,7 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
     if (!response.ok) {
       throw new Error(data.error ?? "刷新模板失败。");
     }
+    cachedTemplateItems = data.items;
     setItems(data.items);
   }
 
@@ -76,6 +129,13 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
           <h1>模板管理</h1>
           <p>模板应直接描述纪念币画面本身，不要写成“请生成一段 Prompt”这类元指令。未知占位符会在保存时被拒绝。</p>
         </div>
+        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
         <div className="field">
           <label htmlFor="templateName">模板名称</label>
           <input id="templateName" value={name} onChange={(event) => setName(event.target.value)} />

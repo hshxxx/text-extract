@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
 import { cloneQuantityTemplateTiers } from "@/lib/quantity-template-presets";
 import type {
+  ExportBootstrapResponse,
   ExportPreviewResponse,
   ExportProductSelection,
   ExportToGoogleSheetsResponse,
@@ -21,24 +22,89 @@ type SelectionState = {
   tiers: QuantityTemplateTier[];
 };
 
+type PersistedGoogleStatus = GoogleAuthStatusResponse & {
+  updatedAt: string;
+};
+
+let cachedExportBootstrap: ExportBootstrapResponse | null = null;
+let cachedGoogleStatus: GoogleAuthStatusResponse | null = null;
+const GOOGLE_STATUS_STORAGE_KEY = "export_google_status_cache";
+
 function sanitizeError(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function readPersistedGoogleStatus() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(GOOGLE_STATUS_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PersistedGoogleStatus>;
+    if (typeof parsed.connected !== "boolean") {
+      return null;
+    }
+
+    return {
+      connected: parsed.connected,
+      googleEmail: typeof parsed.googleEmail === "string" ? parsed.googleEmail : null,
+    } satisfies GoogleAuthStatusResponse;
+  } catch {
+    return null;
+  }
+}
+
+function persistGoogleStatus(status: GoogleAuthStatusResponse) {
+  cachedGoogleStatus = status;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload: PersistedGoogleStatus = {
+    ...status,
+    updatedAt: new Date().toISOString(),
+  };
+
+  window.localStorage.setItem(GOOGLE_STATUS_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function clearPersistedGoogleStatus() {
+  cachedGoogleStatus = null;
+
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(GOOGLE_STATUS_STORAGE_KEY);
+  }
+}
+
 export function ExportToSheetsClient() {
+  const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusResponse>({
-    connected: false,
-    googleEmail: null,
-  });
-  const [products, setProducts] = useState<ExportableProductItem[]>([]);
-  const [templates, setTemplates] = useState<QuantityTemplateRecord[]>([]);
+  const initialGoogleStatus = cachedGoogleStatus ?? readPersistedGoogleStatus();
+  const [googleStatus, setGoogleStatus] = useState<GoogleAuthStatusResponse>(
+    () =>
+      initialGoogleStatus ?? {
+        connected: false,
+        googleEmail: null,
+      },
+  );
+  const [products, setProducts] = useState<ExportableProductItem[]>(() => cachedExportBootstrap?.products ?? []);
+  const [templates, setTemplates] = useState<QuantityTemplateRecord[]>(() => cachedExportBootstrap?.templates ?? []);
   const [selectedMap, setSelectedMap] = useState<Record<string, SelectionState>>({});
   const [preview, setPreview] = useState<ExportPreviewResponse | null>(null);
   const [exportResult, setExportResult] = useState<ExportToGoogleSheetsResponse | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedExportBootstrap);
+  const [isStatusLoading, setIsStatusLoading] = useState(() => !initialGoogleStatus);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [pageSize, setPageSize] = useState(10);
@@ -52,52 +118,135 @@ export function ExportToSheetsClient() {
 
   useEffect(() => {
     const googleFlag = searchParams.get("google");
+    const googleEmail = searchParams.get("google_email");
     const googleError = searchParams.get("google_error");
 
     if (googleFlag === "connected") {
+      const nextStatus = {
+        connected: true,
+        googleEmail: googleEmail ?? cachedGoogleStatus?.googleEmail ?? null,
+      } satisfies GoogleAuthStatusResponse;
+
+      persistGoogleStatus(nextStatus);
+      setGoogleStatus(nextStatus);
+      setStatusError(null);
+      setIsStatusLoading(false);
       setMessage("Google 账号已连接，现在可以导出到你的 Drive。");
+      void refreshGoogleStatus().catch((refreshError) =>
+        setStatusError(sanitizeError(refreshError, "刷新 Google 授权状态失败。")),
+      );
     }
 
     if (googleError) {
-      setBootstrapError(`Google 授权失败：${googleError}`);
+      setStatusError(`Google 授权失败：${googleError}`);
     }
-  }, [searchParams]);
+
+    if (googleFlag || googleError) {
+      const nextParams = new URLSearchParams(searchParams.toString());
+      nextParams.delete("google");
+      nextParams.delete("google_email");
+      nextParams.delete("google_error");
+      const nextUrl = nextParams.toString() ? `${pathname}?${nextParams.toString()}` : pathname;
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [pathname, router, searchParams]);
+
+  useEffect(() => {
+    const persistedStatus = readPersistedGoogleStatus();
+    if (!persistedStatus) {
+      return;
+    }
+
+    cachedGoogleStatus = persistedStatus;
+    setGoogleStatus(persistedStatus);
+    setIsStatusLoading(false);
+  }, []);
 
   useEffect(() => {
     let active = true;
 
     async function bootstrap() {
       try {
-        const [statusResponse, productsResponse, templatesResponse] = await Promise.all([
-          fetch("/api/google/auth/status"),
-          fetch("/api/export/products"),
-          fetch("/api/quantity-templates"),
-        ]);
+        const response = await fetch("/api/export/bootstrap");
+        const data = (await response.json()) as ExportBootstrapResponse & { error?: string };
 
-        const statusData = (await statusResponse.json()) as GoogleAuthStatusResponse & { error?: string };
-        const productsData = (await productsResponse.json()) as { items?: ExportableProductItem[]; error?: string };
-        const templatesData = (await templatesResponse.json()) as { items?: QuantityTemplateRecord[]; error?: string };
-
-        if (!statusResponse.ok) throw new Error(statusData.error ?? "获取 Google 授权状态失败。");
-        if (!productsResponse.ok) throw new Error(productsData.error ?? "获取导出候选失败。");
-        if (!templatesResponse.ok) throw new Error(templatesData.error ?? "获取数量模板失败。");
+        if (!response.ok) throw new Error(data.error ?? "初始化导出页面失败。");
 
         if (!active) return;
 
-        setGoogleStatus({
-          connected: statusData.connected,
-          googleEmail: statusData.googleEmail,
-        });
-        setProducts(productsData.items ?? []);
-        setTemplates(templatesData.items ?? []);
+        setProducts(data.products ?? []);
+        setTemplates(data.templates ?? []);
+        cachedExportBootstrap = {
+          products: data.products ?? [],
+          templates: data.templates ?? [],
+        };
         setBootstrapError(null);
       } catch (loadError) {
         if (!active) return;
         setBootstrapError(sanitizeError(loadError, "初始化导出页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
       }
     }
 
-    void bootstrap();
+    if (cachedExportBootstrap) {
+      setProducts(cachedExportBootstrap.products);
+      setTemplates(cachedExportBootstrap.templates);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("/api/export/google-status");
+        const data = (await response.json()) as GoogleAuthStatusResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "获取 Google 授权状态失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const nextStatus = {
+          connected: data.connected,
+          googleEmail: data.googleEmail,
+        };
+        persistGoogleStatus(nextStatus);
+        setGoogleStatus(nextStatus);
+        setStatusError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setStatusError(sanitizeError(loadError, "获取 Google 授权状态失败。"));
+      } finally {
+        if (active) {
+          setIsStatusLoading(false);
+        }
+      }
+    }
+
+    if (initialGoogleStatus) {
+      setGoogleStatus(initialGoogleStatus);
+      setIsStatusLoading(false);
+      void loadStatus();
+    } else {
+      void loadStatus();
+    }
 
     return () => {
       active = false;
@@ -202,17 +351,20 @@ export function ExportToSheetsClient() {
   }
 
   async function refreshGoogleStatus() {
-    const response = await fetch("/api/google/auth/status");
+    const response = await fetch("/api/export/google-status");
     const data = (await response.json()) as GoogleAuthStatusResponse & { error?: string };
 
     if (!response.ok) {
       throw new Error(data.error ?? "刷新 Google 授权状态失败。");
     }
 
-    setGoogleStatus({
+    const nextStatus = {
       connected: data.connected,
       googleEmail: data.googleEmail,
-    });
+    };
+
+    persistGoogleStatus(nextStatus);
+    setGoogleStatus(nextStatus);
   }
 
   return (
@@ -226,7 +378,9 @@ export function ExportToSheetsClient() {
           <div className="stack" style={{ gap: 6 }}>
             <strong>Google 授权状态</strong>
             <span className="helper">
-              {googleStatus.connected
+              {isStatusLoading
+                ? "正在刷新 Google 授权状态..."
+                : googleStatus.connected
                 ? `已连接：${googleStatus.googleEmail ?? "Google 账号"}`
                 : "未连接 Google Drive，无法执行导出。"}
             </span>
@@ -250,7 +404,9 @@ export function ExportToSheetsClient() {
                       setError(data.error ?? "断开 Google 授权失败。");
                       return;
                     }
+                    clearPersistedGoogleStatus();
                     setMessage("Google 授权已断开。");
+                    setIsStatusLoading(false);
                     setGoogleStatus({ connected: false, googleEmail: null });
                   })
                 }
@@ -265,9 +421,20 @@ export function ExportToSheetsClient() {
           </div>
         </div>
         {message ? <p className="helper">{message}</p> : null}
+        {statusError ? <p className="error-text">{statusError}</p> : null}
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
       </section>
+
+      {isBootstrapping ? (
+        <section className="panel">
+          <div className="stack">
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+            <div className="skeleton-card" />
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid-2">
         <section className="panel">

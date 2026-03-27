@@ -5,38 +5,111 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
 import type {
   ExtractionResultListItem,
+  GenerateImageBootstrapResponse,
   ImageGenerationResponse,
-  ImageModelConfigRecord,
   ImageSize,
+  SafeImageModelConfigRecord,
 } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
-type SafeImageModelConfig = Omit<ImageModelConfigRecord, "api_key_encrypted">;
-
 type ImageGenerationClientProps = {
   initialPrompts: ExtractionResultListItem[];
-  initialImageModels: SafeImageModelConfig[];
+  initialImageModels: SafeImageModelConfigRecord[];
 };
 
 const IMAGE_SIZES: ImageSize[] = ["1024x1024", "1536x1536", "2048x2048", "2560x1440", "3840x2160"];
+let cachedImageGenerationBootstrap: {
+  prompts: ExtractionResultListItem[];
+  imageModels: SafeImageModelConfigRecord[];
+} | null = null;
+
+function sanitizeError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export function ImageGenerationClient({
   initialPrompts,
   initialImageModels,
 }: ImageGenerationClientProps) {
-  const [prompts, setPrompts] = useState(initialPrompts);
-  const [selectedPromptId, setSelectedPromptId] = useState(initialPrompts[0]?.id ?? "");
+  const [prompts, setPrompts] = useState(() => cachedImageGenerationBootstrap?.prompts ?? initialPrompts);
+  const [imageModels, setImageModels] = useState<SafeImageModelConfigRecord[]>(
+    () => cachedImageGenerationBootstrap?.imageModels ?? initialImageModels,
+  );
+  const [selectedPromptId, setSelectedPromptId] = useState(
+    () => cachedImageGenerationBootstrap?.prompts[0]?.id ?? initialPrompts[0]?.id ?? "",
+  );
   const [promptQuery, setPromptQuery] = useState("");
   const [promptFilter, setPromptFilter] = useState("all");
   const [promptPageSize, setPromptPageSize] = useState(10);
   const [promptPage, setPromptPage] = useState(1);
-  const [imageModelConfigId, setImageModelConfigId] = useState(
-    initialImageModels.find((item) => item.is_default)?.id ?? initialImageModels[0]?.id ?? "",
+  const [imageModelConfigId, setImageModelConfigId] = useState(() =>
+    (cachedImageGenerationBootstrap?.imageModels ?? initialImageModels).find((item) => item.is_default)?.id ??
+    (cachedImageGenerationBootstrap?.imageModels ?? initialImageModels)[0]?.id ??
+    "",
   );
   const [imageSize, setImageSize] = useState<ImageSize>("1024x1024");
   const [result, setResult] = useState<ImageGenerationResponse | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !cachedImageGenerationBootstrap);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const response = await fetch("/api/generate-image/bootstrap");
+        const data = (await response.json()) as GenerateImageBootstrapResponse & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "初始化图片生成页面失败。");
+        }
+
+        if (!active) {
+          return;
+        }
+
+        const next = {
+          prompts: data.prompts ?? [],
+          imageModels: data.imageModels ?? [],
+        };
+
+        cachedImageGenerationBootstrap = next;
+        setPrompts(next.prompts);
+        setImageModels(next.imageModels);
+        setSelectedPromptId((current) => (next.prompts.some((item) => item.id === current) ? current : (next.prompts[0]?.id ?? "")));
+        setImageModelConfigId((current) =>
+          next.imageModels.some((item) => item.id === current)
+            ? current
+            : (next.imageModels.find((item) => item.is_default)?.id ?? next.imageModels[0]?.id ?? ""),
+        );
+        setBootstrapError(null);
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+        setBootstrapError(sanitizeError(loadError, "初始化图片生成页面失败。"));
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    if (cachedImageGenerationBootstrap) {
+      setPrompts(cachedImageGenerationBootstrap.prompts);
+      setImageModels(cachedImageGenerationBootstrap.imageModels);
+      setIsBootstrapping(false);
+      void bootstrap();
+    } else {
+      void bootstrap();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const selectedPrompt = useMemo(
     () => prompts.find((item) => item.id === selectedPromptId) ?? null,
@@ -74,6 +147,12 @@ export function ImageGenerationClient({
     }
   }, [filteredPrompts, selectedPromptId]);
 
+  useEffect(() => {
+    if (!imageModels.some((item) => item.id === imageModelConfigId)) {
+      setImageModelConfigId(imageModels.find((item) => item.is_default)?.id ?? imageModels[0]?.id ?? "");
+    }
+  }, [imageModelConfigId, imageModels]);
+
   async function refreshPrompts() {
     const response = await fetch("/api/extraction-results?limit=50");
     const data = await response.json();
@@ -83,6 +162,10 @@ export function ImageGenerationClient({
     }
 
     const items = data.items as ExtractionResultListItem[];
+    cachedImageGenerationBootstrap = {
+      prompts: items,
+      imageModels: cachedImageGenerationBootstrap?.imageModels ?? imageModels,
+    };
     setPrompts(items);
     setSelectedPromptId((current) => (items.some((item) => item.id === current) ? current : (items[0]?.id ?? "")));
   }
@@ -94,7 +177,14 @@ export function ImageGenerationClient({
           <h1>图片生成</h1>
           <p>直接消费文本提取阶段已经生成的 Prompt。若要改 Prompt，请返回文本解析页重新生成。</p>
         </div>
-        {prompts.length === 0 ? (
+        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {isBootstrapping ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
+        {prompts.length === 0 && !isBootstrapping ? (
           <div className="empty-state">
             <p>还没有可用 Prompt。先去文本解析页生成一条成功记录。</p>
             <Link href="/extract" className="primary-button">
@@ -182,7 +272,7 @@ export function ImageGenerationClient({
 
         <div className="panel">
           <h2>图片设置</h2>
-          {initialImageModels.length === 0 ? (
+          {imageModels.length === 0 && !isBootstrapping ? (
             <div className="empty-state">
               <p>请先在模型配置页创建图片模型。</p>
               <Link href="/settings/models" className="primary-button">
@@ -199,7 +289,7 @@ export function ImageGenerationClient({
                     value={imageModelConfigId}
                     onChange={(event) => setImageModelConfigId(event.target.value)}
                   >
-                    {initialImageModels.map((item) => (
+                    {imageModels.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name} · {item.model}
                       </option>

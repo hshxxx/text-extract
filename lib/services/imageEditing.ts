@@ -613,7 +613,7 @@ export async function listEditableImagesForEditing(
 
   const { data: results, error: resultError } = await supabase
     .from("image_generation_results")
-    .select("*")
+    .select("id, task_id, image_url, created_at")
     .in(
       "task_id",
       taskList.map((task) => task.id),
@@ -631,7 +631,7 @@ export async function listEditableImagesForEditing(
 
   const { data: editTasks, error: editTaskError } = await supabase
     .from("edit_tasks")
-    .select("*")
+    .select("id, source_image_id, status, created_at")
     .in(
       "source_image_id",
       resultList.map((result) => result.id),
@@ -859,9 +859,10 @@ export async function getEditTaskDetail(
 export async function listEditHistory(supabase: SupabaseClient, userId: string) {
   const { data: tasks, error: taskError } = await supabase
     .from("edit_tasks")
-    .select("*")
+    .select("id, source_image_id, status, created_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (taskError) {
     throw taskError;
@@ -875,7 +876,7 @@ export async function listEditHistory(supabase: SupabaseClient, userId: string) 
 
   const { data: jobs, error: jobError } = await supabase
     .from("edit_jobs")
-    .select("*")
+    .select("task_id, side, status, image_url, created_at")
     .in(
       "task_id",
       taskList.map((task) => task.id),
@@ -917,7 +918,7 @@ export async function listEditHistoryBySource(
 ) {
   const { data: tasks, error: taskError } = await supabase
     .from("edit_tasks")
-    .select("*")
+    .select("id, source_image_id, status, created_at")
     .eq("user_id", userId)
     .eq("source_image_id", sourceImageId)
     .in("status", ["completed", "partial_success"])
@@ -935,7 +936,7 @@ export async function listEditHistoryBySource(
 
   const { data: jobs, error: jobError } = await supabase
     .from("edit_jobs")
-    .select("*")
+    .select("task_id, side, status, image_url, created_at")
     .in(
       "task_id",
       taskList.map((task) => task.id),

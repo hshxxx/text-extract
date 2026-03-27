@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
 import type {
   EditHistoryDetail,
@@ -8,6 +8,8 @@ import type {
   ExportHistoryDetail,
   ExportHistoryItem,
   ExtractionJobRecord,
+  HistoryBootstrapResponse,
+  HistoryTab,
   ImageHistoryDetail,
   ImageHistoryItem,
   MarketingCopyHistoryItem,
@@ -15,33 +17,51 @@ import type {
 } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
 
+const historyBootstrapCache = new Map<HistoryTab, HistoryBootstrapResponse>();
+
 type HistoryClientProps = {
-  initialTextItems: ExtractionJobRecord[];
-  initialImageItems: ImageHistoryItem[];
-  initialEditItems: EditHistoryItem[];
-  initialMarketingItems: MarketingCopyHistoryItem[];
-  initialExportItems: ExportHistoryItem[];
+  initialTextItems?: ExtractionJobRecord[];
+  initialImageItems?: ImageHistoryItem[];
+  initialEditItems?: EditHistoryItem[];
+  initialMarketingItems?: MarketingCopyHistoryItem[];
+  initialExportItems?: ExportHistoryItem[];
 };
 
 export function HistoryClient({
-  initialTextItems,
-  initialImageItems,
-  initialEditItems,
-  initialMarketingItems,
-  initialExportItems,
+  initialTextItems = [],
+  initialImageItems = [],
+  initialEditItems = [],
+  initialMarketingItems = [],
+  initialExportItems = [],
 }: HistoryClientProps) {
-  const [activeTab, setActiveTab] = useState<"text" | "image" | "edit" | "marketing" | "export">("text");
-  const [textItems] = useState(initialTextItems);
-  const [imageItems] = useState(initialImageItems);
-  const [editItems] = useState(initialEditItems);
-  const [marketingItems] = useState(initialMarketingItems);
-  const [exportItems] = useState(initialExportItems);
-  const [selectedText, setSelectedText] = useState<ExtractionJobRecord | null>(initialTextItems[0] ?? null);
+  const cachedTextItems = historyBootstrapCache.get("text")?.textItems ?? initialTextItems;
+  const cachedImageItems = historyBootstrapCache.get("image")?.imageItems ?? initialImageItems;
+  const cachedEditItems = historyBootstrapCache.get("edit")?.editItems ?? initialEditItems;
+  const cachedMarketingItems = historyBootstrapCache.get("marketing")?.marketingItems ?? initialMarketingItems;
+  const cachedExportItems = historyBootstrapCache.get("export")?.exportItems ?? initialExportItems;
+  const [activeTab, setActiveTab] = useState<HistoryTab>("text");
+  const [textItems, setTextItems] = useState(cachedTextItems);
+  const [imageItems, setImageItems] = useState(cachedImageItems);
+  const [editItems, setEditItems] = useState(cachedEditItems);
+  const [marketingItems, setMarketingItems] = useState(cachedMarketingItems);
+  const [exportItems, setExportItems] = useState(cachedExportItems);
+  const [selectedText, setSelectedText] = useState<ExtractionJobRecord | null>(cachedTextItems[0] ?? null);
   const [selectedImage, setSelectedImage] = useState<ImageHistoryDetail | null>(null);
   const [selectedEdit, setSelectedEdit] = useState<EditHistoryDetail | null>(null);
   const [selectedMarketing, setSelectedMarketing] = useState<MarketingCopyVersionDetail | null>(null);
   const [selectedExport, setSelectedExport] = useState<ExportHistoryDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [loadingTab, setLoadingTab] = useState<HistoryTab | null>(
+    historyBootstrapCache.size > 0 || cachedTextItems.length > 0 ? null : "text",
+  );
+  const [loadedTabs, setLoadedTabs] = useState<HistoryTab[]>(() => {
+    const tabs = [...historyBootstrapCache.keys()];
+    if (tabs.length > 0) {
+      return tabs;
+    }
+    return cachedTextItems.length > 0 ? ["text"] : [];
+  });
   const [textQuery, setTextQuery] = useState("");
   const [imageQuery, setImageQuery] = useState("");
   const [editQuery, setEditQuery] = useState("");
@@ -175,6 +195,79 @@ export function HistoryClient({
     [filteredExportItems, exportPage, exportPageSize],
   );
 
+  useEffect(() => {
+    if (selectedText || textItems.length === 0) {
+      return;
+    }
+    setSelectedText(textItems[0] ?? null);
+  }, [selectedText, textItems]);
+
+  function applyHistoryPayload(tab: HistoryTab, data: HistoryBootstrapResponse) {
+    historyBootstrapCache.set(tab, data);
+
+    if (tab === "text") {
+      setTextItems(data.textItems ?? []);
+      setSelectedText((current) => current ?? data.textItems?.[0] ?? null);
+    } else if (tab === "image") {
+      setImageItems(data.imageItems ?? []);
+    } else if (tab === "edit") {
+      setEditItems(data.editItems ?? []);
+    } else if (tab === "marketing") {
+      setMarketingItems(data.marketingItems ?? []);
+    } else {
+      setExportItems(data.exportItems ?? []);
+    }
+
+    setLoadedTabs((current) => (current.includes(tab) ? current : [...current, tab]));
+  }
+
+  async function loadTab(tab: HistoryTab, options?: { silent?: boolean }) {
+    if (!options?.silent) {
+      setLoadingTab(tab);
+    }
+    setBootstrapError(null);
+
+    const response = await fetch(`/api/history/bootstrap?tab=${tab}`);
+    const data = (await response.json()) as HistoryBootstrapResponse & { error?: string };
+
+    if (!response.ok) {
+      throw new Error(data.error ?? "获取历史记录失败。");
+    }
+
+    applyHistoryPayload(tab, data);
+  }
+
+  function handleTabChange(tab: HistoryTab) {
+    setActiveTab(tab);
+    setError(null);
+
+    if (loadedTabs.includes(tab)) {
+      return;
+    }
+
+    void loadTab(tab)
+      .catch((loadError) =>
+        setBootstrapError(loadError instanceof Error ? loadError.message : "获取历史记录失败。"),
+      )
+      .finally(() => setLoadingTab((current) => (current === tab ? null : current)));
+  }
+
+  useEffect(() => {
+    if (loadedTabs.includes("text")) {
+      setLoadingTab(null);
+      void loadTab("text", { silent: true }).catch(() => {
+        // Keep cached data if refresh fails.
+      });
+      return;
+    }
+
+    void loadTab("text")
+      .catch((loadError) =>
+        setBootstrapError(loadError instanceof Error ? loadError.message : "获取历史记录失败。"),
+      )
+      .finally(() => setLoadingTab(null));
+  }, [loadedTabs]);
+
   async function openTextDetail(id: string) {
     setError(null);
     const response = await fetch(`/api/history/${id}`);
@@ -246,22 +339,29 @@ export function HistoryClient({
           <p>文本提取、图片生成、图片编辑和营销文案都会在这里保留可追溯历史。</p>
         </div>
         <div className="tab-row" style={{ marginBottom: 16 }}>
-          <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("text")}>
+          <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("text")}>
             文本提取
           </button>
-          <button type="button" className={activeTab === "image" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("image")}>
+          <button type="button" className={activeTab === "image" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("image")}>
             图片生成
           </button>
-          <button type="button" className={activeTab === "edit" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("edit")}>
+          <button type="button" className={activeTab === "edit" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("edit")}>
             图片编辑
           </button>
-          <button type="button" className={activeTab === "marketing" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("marketing")}>
+          <button type="button" className={activeTab === "marketing" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("marketing")}>
             文案生成
           </button>
-          <button type="button" className={activeTab === "export" ? "nav-link-active" : "nav-link"} onClick={() => setActiveTab("export")}>
+          <button type="button" className={activeTab === "export" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("export")}>
             导出 Sheets
           </button>
         </div>
+        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+        {loadingTab === activeTab ? (
+          <div className="stack" style={{ marginBottom: 16 }}>
+            <div className="skeleton-line skeleton-heading" />
+            <div className="skeleton-card" />
+          </div>
+        ) : null}
 
         {activeTab === "text" ? (
           <div className="stack">

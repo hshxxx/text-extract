@@ -300,9 +300,10 @@ export async function runImageGeneration(
 export async function listImageHistory(supabase: SupabaseClient, userId: string) {
   const { data: tasks, error: taskError } = await supabase
     .from("image_generation_tasks")
-    .select("*")
+    .select("id, extraction_job_id, image_model_config_id, image_size, status, error_message, created_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (taskError) {
     throw taskError;
@@ -317,7 +318,7 @@ export async function listImageHistory(supabase: SupabaseClient, userId: string)
   const [resultsResponse, modelResponse, extractionResponse] = await Promise.all([
     supabase
       .from("image_generation_results")
-      .select("*")
+      .select("task_id, image_url")
       .in(
         "task_id",
         taskList.map((item) => item.id),

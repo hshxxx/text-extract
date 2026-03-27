@@ -1,13 +1,10 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireApiUser } from "@/lib/api-auth";
 import { listExtractionResultsForImage } from "@/lib/services/extractionResults";
 import { jsonError, jsonOk } from "@/utils/http";
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await requireApiUser();
 
     if (!user) {
       return jsonError("未登录。", 401);

@@ -2,11 +2,13 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useAppSession } from "@/components/session-shell";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function LogoutButton() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { clearSession } = useAppSession();
 
   return (
     <button
@@ -16,8 +18,8 @@ export function LogoutButton() {
         startTransition(async () => {
           const supabase = getSupabaseBrowserClient();
           await supabase.auth.signOut();
+          clearSession();
           router.replace("/login");
-          router.refresh();
         })
       }
       disabled={isPending}

@@ -33,8 +33,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    await connectGoogleAccount(supabase, user.id, code);
-    return redirectToExport(request.url, "/export-to-sheets", { google: "connected" });
+    const { googleEmail } = await connectGoogleAccount(supabase, user.id, code);
+    return redirectToExport(request.url, "/export-to-sheets", {
+      google: "connected",
+      google_email: googleEmail,
+    });
   } catch (error) {
     return redirectToExport(request.url, "/export-to-sheets", {
       google_error: error instanceof Error ? error.message : "google_auth_failed",
