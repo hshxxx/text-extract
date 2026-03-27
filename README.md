@@ -41,8 +41,20 @@ npm run dev
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `ENCRYPTION_KEY`
 
-可选但建议保留的本地辅助变量：
+Google OAuth 启用时还需要：
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI`
+
+可选但建议保留的辅助变量：
 
 - `OPENAI_COMPAT_BASE_URL`
 - `OPENAI_COMPAT_API_KEY`
 - `NEXT_PUBLIC_APP_URL`
+
+注意：
+
+- `NEXT_PUBLIC_APP_URL` 与 `GOOGLE_OAUTH_REDIRECT_URI` 是 URL 型变量，线上不要直接照搬本地 `localhost` 值。
+- Preview 应优先使用稳定 alias，例如 `https://ai-prompt-structurer-hshxxx-hshxxxs-projects.vercel.app`，不要依赖一次性部署域名。
+- 如果 Preview 开启了 Vercel Authentication，命令行验收需要使用 `vercel curl` 或 protection bypass。
