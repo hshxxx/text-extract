@@ -1,5 +1,7 @@
-const MISSING_SERVER_MESSAGE = "当前 worktree 缺少 .env.local 或 Supabase 环境变量未加载。";
-const MISSING_BROWSER_MESSAGE = "当前 worktree 缺少 .env.local 或浏览器端 Supabase 环境变量未加载。";
+const MISSING_SERVER_MESSAGE =
+  "本地环境未初始化，请先运行 `npm run env:link` 并确认 `~/.config/ai-prompt-structurer/.env.local` 已配置。";
+const MISSING_BROWSER_MESSAGE =
+  "本地环境未初始化，请先运行 `npm run env:link`，然后重启 dev server。";
 
 export function getSupabasePublicEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

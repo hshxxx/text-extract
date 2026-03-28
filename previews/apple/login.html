@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page compact-page">
+    <header class="topbar simple">
+      <div class="brand">
+        <span class="brand-mark">Preview</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Apple 风格登录页</div>
+      </div>
+      <a class="topbar-action" href="./index.html">返回入口页</a>
+    </header>
+
+    <main class="auth-layout">
+      <section class="auth-shell">
+        <div class="auth-grid">
+          <article class="auth-poster">
+            <span class="brand-mark" style="color: rgba(255,255,255,0.68);">Structured prompt workflow</span>
+            <h1>登录后，整套创作流程都会变得更安静、更准确。</h1>
+            <p>从固定 Schema 文本提取，到图片生成、图片编辑、文案生成与导出，全流程收敛在一套统一的工作界面里。</p>
+            <div class="auth-badge-row">
+              <div class="auth-badge">文本解析</div>
+              <div class="auth-badge">图像生成</div>
+              <div class="auth-badge">双语文案</div>
+            </div>
+          </article>
+
+          <article class="pane auth-form">
+            <span class="eyebrow">Magic Link Sign In</span>
+            <h2>登录 AI Prompt Structurer</h2>
+            <p class="muted">使用邮箱 Magic Link 登录。登录后可管理模型、模板、导出配置与完整历史。</p>
+            <div class="divider"></div>
+            <div class="field">
+              <label for="email">邮箱地址</label>
+              <input id="email" class="text-input" type="email" value="you@example.com" />
+            </div>
+            <div class="field">
+              <label for="workspace">跳转工作区</label>
+              <select id="workspace" class="select">
+                <option>默认进入文本解析</option>
+                <option>继续上次编辑任务</option>
+              </select>
+            </div>
+            <div class="button-row">
+              <button class="primary-button">发送 Magic Link</button>
+              <button class="secondary-button">查看示意流程</button>
+            </div>
+            <div class="divider"></div>
+            <div class="mini-stat-row">
+              <div class="mini-stat"><strong>4</strong><span>核心工作页</span></div>
+              <div class="mini-stat"><strong>3</strong><span>设置工作区</span></div>
+              <div class="mini-stat"><strong>1</strong><span>统一历史中心</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

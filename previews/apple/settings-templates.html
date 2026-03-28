@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Settings Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 模板管理</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip active" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>模板管理</h1>
+        <p>编辑模板内容、检查可用字段，并维护默认模板与已有模板列表。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill success">Valid</span>
+      </div>
+    </section>
+
+    <div class="subnav-wrap">
+      <nav class="subnav-chips">
+        <a class="subnav-chip" href="./settings-models.html">模型配置</a>
+        <a class="subnav-chip active" href="./settings-templates.html">模板管理</a>
+        <a class="subnav-chip" href="./settings-quantity-templates.html">数量模板</a>
+      </nav>
+    </div>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>模板编辑</h2>
+                <p>模板应直接描述纪念币画面本身，不要写成元指令。</p>
+              </div>
+              <span class="status-pill success">Valid</span>
+            </div>
+            <div class="field">
+              <label>模板名称</label>
+              <input class="text-input" value="纪念币默认模板" />
+            </div>
+            <div class="field">
+              <label>模板内容</label>
+              <textarea class="textarea large">请生成一枚{主题}纪念币。正面包含{正面元素}，背面包含{背面元素}。强调{材质}与{风格}，细节上体现{细节要求}，整体用于高端商品图生成。</textarea>
+            </div>
+            <label class="toggle-row helper-text" style="margin-bottom: 16px;"><input type="checkbox" checked /> 设为默认模板</label>
+            <div class="button-row primary-group stacked-mobile">
+              <button class="primary-button">保存模板</button>
+              <button class="secondary-button">取消编辑</button>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>可用字段</h3>
+                  <p class="muted">字段不再被塞进厚重卡片，而是更轻的知识块</p>
+                </div>
+                <span class="badge">7 placeholders</span>
+              </div>
+              <div class="schema-grid">
+                <div class="schema-item"><strong>{主题}</strong><span>纪念币主题</span></div>
+                <div class="schema-item"><strong>{正面元素}</strong><span>正面视觉元素</span></div>
+                <div class="schema-item"><strong>{背面元素}</strong><span>背面视觉元素</span></div>
+                <div class="schema-item"><strong>{材质}</strong><span>金属、银、铜等</span></div>
+                <div class="schema-item"><strong>{风格}</strong><span>收藏品、庄重、现代</span></div>
+                <div class="schema-item"><strong>{细节要求}</strong><span>雕刻、边缘、纹理</span></div>
+                <div class="schema-item"><strong>{补充说明}</strong><span>其他约束</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>模板预览</h3>
+                  <p class="muted">实时看到正在编辑的文本效果</p>
+                </div>
+                <span class="soft-pill">Live Preview</span>
+              </div>
+              <div class="mono-block">请生成一枚{主题}纪念币。正面包含{正面元素}，背面包含{背面元素}。强调{材质}与{风格}，细节上体现{细节要求}，整体用于高端商品图生成。</div>
+              <p class="muted" style="margin-top: 12px;">当前占位符：主题、正面元素、背面元素、材质、风格、细节要求</p>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>已有模板</h3>
+                  <p class="muted">模板列表与编辑区形成稳定的两栏关系</p>
+                </div>
+                <span class="badge">3 items</span>
+              </div>
+              <div class="list-stack">
+                <div class="setting-card active">
+                  <div class="split">
+                    <div>
+                      <strong>纪念币默认模板</strong>
+                      <p class="muted">系统预置 · 默认</p>
+                    </div>
+                    <div class="button-row stacked-mobile">
+                      <button class="ghost-button">编辑</button>
+                      <button class="danger-button">删除</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-card">
+                  <div class="split">
+                    <div>
+                      <strong>极简收藏品模板</strong>
+                      <p class="muted">自定义模板</p>
+                    </div>
+                    <button class="ghost-button">编辑</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

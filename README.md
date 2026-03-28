@@ -9,19 +9,35 @@
 
 ## Local Setup
 
-1. 复制 `.env.example` 为 `.env.local`，填入 Supabase 项目配置和本地加密密钥。
-2. 在 Supabase SQL Editor 依次执行：
+1. 首次把 `.env.example` 复制到 `~/.config/ai-prompt-structurer/.env.local`，填入 Supabase 项目配置和本地加密密钥。
+2. 在当前 worktree 根目录运行一次：
+
+```bash
+npm run env:link
+```
+
+3. 在 Supabase SQL Editor 依次执行：
    - [database/migrations/0001_init.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0001_init.sql)
    - [database/migrations/0002_image_generation.sql](/Users/hsh/Desktop/codex/challenge-coin-2/database/migrations/0002_image_generation.sql)
-3. 在 Supabase Auth 中补充 Redirect URL：
+4. 在 Supabase Auth 中补充 Redirect URL：
    - `http://localhost:3000/api/auth/callback`
+   - `http://localhost:3001/api/auth/callback`
+   - `http://localhost:3002/api/auth/callback`
+   - `http://localhost:3003/api/auth/callback`
+   - 建议一次性补齐 `3000-3010` 对应的 `/api/auth/callback`
    - 生产域名对应的 `/api/auth/callback`
-4. 安装依赖并运行：
+5. 安装依赖并运行：
 
 ```bash
 npm install
-npm run dev
+npm run dev:local
 ```
+
+说明：
+
+- `.env.local` 是 worktree 私有文件系统对象，不会被 Git worktree 自动继承。
+- 当前仓库约定每个 worktree 的 `.env.local` 都是指向 `~/.config/ai-prompt-structurer/.env.local` 的软链接。
+- 日常开发优先使用 `npm run dev:local`；它会先执行环境链接和关键变量检查，再启动 Next.js。
 
 ## OpenAI-Compatible Proxy
 

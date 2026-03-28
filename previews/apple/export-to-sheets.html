@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Export To Sheets Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 导出 Sheets</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip active" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>导出 Sheets</h1>
+        <p>选择已确认的商品文案与成品图，检查数量模板后导出到 Google Sheets。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill success">Connected</span>
+        <a class="ghost-button" href="./settings-quantity-templates.html">管理数量模板</a>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>Google 授权状态</h2>
+                <p>已连接到 Google Drive，可直接导出到你的 Products sheet。</p>
+              </div>
+              <span class="status-pill success">Connected</span>
+            </div>
+            <div class="setting-card active">
+              <div class="split">
+                <div>
+                  <strong>Google 账号</strong>
+                  <p class="muted">ops@challengecoin.ai</p>
+                </div>
+                <div class="button-row stacked-mobile">
+                  <button class="secondary-button">管理数量模板</button>
+                  <button class="danger-button">Disconnect Google</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-header">
+              <div>
+                <h3>可导出商品</h3>
+                <p class="muted">仅显示 confirmed marketing copy</p>
+              </div>
+              <span class="soft-pill">3 selected</span>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>搜索</label>
+                <input class="text-input" value="Silk Road" />
+              </div>
+              <div class="field">
+                <label>筛选</label>
+                <select class="select"><option>已选择</option></select>
+              </div>
+            </div>
+
+            <div class="list-stack">
+              <div class="list-item active">
+                <div class="split">
+                  <label class="toggle-row"><input class="list-check" type="checkbox" checked /> <strong>Silk Road Relief Commemorative Coin</strong></label>
+                  <span class="badge">v19</span>
+                </div>
+                <p class="muted list-summary">模板：纪念币 Shopify + Facebook 模板 v2</p>
+                <div class="grid-2" style="margin-top: 12px;">
+                  <div class="field">
+                    <label>数量模板</label>
+                    <select class="select"><option>礼品装默认模板</option></select>
+                  </div>
+                  <div class="field">
+                    <label>SKU 前缀</label>
+                    <input class="text-input" value="SR-COIN" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="list-item">
+                <div class="split">
+                  <label class="toggle-row"><input class="list-check" type="checkbox" checked /> <strong>Celestial Gate Collector Coin</strong></label>
+                  <span class="badge">v12</span>
+                </div>
+                <p class="muted list-summary">模板：高端陈列版数量模板</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>导出预览</h3>
+                  <p class="muted">Preview 将重点信息组织成运营人员可快速检查的结构</p>
+                </div>
+                <span class="soft-pill">Matrixify Preview</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Handle</th>
+                      <th>Title</th>
+                      <th>Variant SKU</th>
+                      <th>Price</th>
+                      <th>Inventory</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>silk-road-relief-coin</td>
+                      <td>Silk Road Relief Commemorative Coin</td>
+                      <td>SR-COIN-1PC</td>
+                      <td>$89.00</td>
+                      <td>120</td>
+                    </tr>
+                    <tr>
+                      <td>silk-road-relief-coin</td>
+                      <td>Silk Road Relief Commemorative Coin</td>
+                      <td>SR-COIN-2PC</td>
+                      <td>$168.00</td>
+                      <td>64</td>
+                    </tr>
+                    <tr>
+                      <td>celestial-gate-coin</td>
+                      <td>Celestial Gate Collector Coin</td>
+                      <td>CG-COIN-1PC</td>
+                      <td>$96.00</td>
+                      <td>80</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>导出结果</h3>
+                  <p class="muted">静态稿里只展示状态，不模拟真实 API</p>
+                </div>
+                <span class="status-pill success">Ready to Export</span>
+              </div>
+              <div class="mini-stat-row">
+                <div class="mini-stat"><strong>3</strong><span>已选商品</span></div>
+                <div class="mini-stat"><strong>7</strong><span>生成 SKU</span></div>
+                <div class="mini-stat"><strong>1</strong><span>目标 Sheet</span></div>
+              </div>
+              <div class="button-row primary-group stacked-mobile" style="margin-top: 18px;">
+                <button class="primary-button">导出到 Google Sheets</button>
+                <button class="secondary-button">刷新授权状态</button>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

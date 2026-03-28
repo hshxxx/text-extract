@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   ExtractBootstrapResponse,
   ExtractionResponse,
@@ -166,12 +167,20 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
   }, [filteredTemplates, templateId]);
 
   return (
-    <div className="grid-2">
-      <section className="panel hero-card">
-        <div className="hero">
-          <h1>固定 Schema 文本解析</h1>
-          <p>输入原始需求，系统将提取 7 个标准字段，再按模板渲染最终 Prompt。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="文本解析"
+        description="输入原始需求，提取固定 Schema 字段，并按模板渲染最终 Prompt。"
+        actions={<span className="status-pill success">Fixed Schema</span>}
+      />
+      <div className="grid-2">
+        <section className="panel">
+          <div className="section-header">
+            <div>
+              <h2>输入与配置</h2>
+              <p className="lead">先选模型与模板，再提交待解析文本。</p>
+            </div>
+          </div>
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -322,51 +331,52 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
           </button>
         </div>
         {error ? <p className="error-text">{error}</p> : null}
-      </section>
+        </section>
 
-      <section className="stack">
-        <div className="panel">
-          <div className="split-header">
-            <div>
-              <h2>结构化字段</h2>
-              <p className="subtle">固定输出字段共 7 项。</p>
+        <section className="stack">
+          <div className="panel">
+            <div className="split-header">
+              <div>
+                <h2>结构化字段</h2>
+                <p className="subtle">固定输出字段共 7 项。</p>
+              </div>
+              {result?.status ? (
+                <span className={`status ${result.status === "success" ? "status-success" : "status-failed"}`}>
+                  {result.status === "success" ? "成功" : "失败"}
+                </span>
+              ) : null}
             </div>
-            {result?.status ? (
-              <span className={`status ${result.status === "success" ? "status-success" : "status-failed"}`}>
-                {result.status === "success" ? "成功" : "失败"}
-              </span>
-            ) : null}
+            {result?.structuredData ? (
+              <div className="data-grid">
+                {FIXED_SCHEMA_FIELDS.map((field) => (
+                  <div key={field} className="data-item">
+                    <strong>{field}</strong>
+                    <div>{(result.structuredData as StructuredData)[field] || "空字符串"}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">生成后会在这里展示结构化字段结果。</div>
+            )}
           </div>
-          {result?.structuredData ? (
-            <div className="data-grid">
-              {FIXED_SCHEMA_FIELDS.map((field) => (
-                <div key={field} className="data-item">
-                  <strong>{field}</strong>
-                  <div>{(result.structuredData as StructuredData)[field] || "空字符串"}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">生成后会在这里展示结构化字段结果。</div>
-          )}
-        </div>
-        <div className="panel">
-          <h2>最终 Prompt</h2>
-          {result?.finalPrompt ? (
-            <div className="mono-block">{result.finalPrompt}</div>
-          ) : (
-            <div className="empty-state">生成后会在这里展示最终 Prompt。</div>
-          )}
-        </div>
-        <div className="panel">
-          <h2>原始模型输出</h2>
-          {result?.rawModelOutput ? (
-            <div className="mono-block">{result.rawModelOutput}</div>
-          ) : (
-            <div className="empty-state">便于排查 JSON 修复与字段校验问题。</div>
-          )}
-        </div>
-      </section>
+          <div className="panel">
+            <h2>最终 Prompt</h2>
+            {result?.finalPrompt ? (
+              <div className="mono-block">{result.finalPrompt}</div>
+            ) : (
+              <div className="empty-state">生成后会在这里展示最终 Prompt。</div>
+            )}
+          </div>
+          <div className="panel">
+            <h2>原始模型输出</h2>
+            {result?.rawModelOutput ? (
+              <div className="mono-block">{result.rawModelOutput}</div>
+            ) : (
+              <div className="empty-state">便于排查 JSON 修复与字段校验问题。</div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

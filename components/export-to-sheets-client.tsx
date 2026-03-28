@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import { cloneQuantityTemplateTiers } from "@/lib/quantity-template-presets";
 import type {
   ExportBootstrapResponse,
@@ -368,12 +369,14 @@ export function ExportToSheetsClient() {
   }
 
   return (
-    <div className="stack">
-      <section className="panel">
-        <div className="hero">
-          <h1>Export To Google Sheets</h1>
-          <p>把 confirmed 的 Shopify 英文文案和 front/back 成品图导出成 Matrixify `Products` sheet。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="导出 Sheets"
+        description="选择 confirmed 文案版本、套用数量模板，并将 Matrixify 数据导出到 Google Sheets。"
+        actions={<span className={`status-pill ${googleStatus.connected ? "success" : "danger"}`}>{googleStatus.connected ? "Google Connected" : "Google Required"}</span>}
+      />
+      <div className="stack">
+        <section className="panel">
         <div className="split-header">
           <div className="stack" style={{ gap: 6 }}>
             <strong>Google 授权状态</strong>
@@ -385,10 +388,10 @@ export function ExportToSheetsClient() {
                 : "未连接 Google Drive，无法执行导出。"}
             </span>
           </div>
-          <div className="button-row">
-            <Link href="/settings/quantity-templates" className="ghost-button">
-              管理数量模板
-            </Link>
+        <div className="button-row primary-group">
+          <Link href="/settings/quantity-templates" className="ghost-button">
+            管理数量模板
+          </Link>
             {googleStatus.connected ? (
               <button
                 type="button"
@@ -411,11 +414,11 @@ export function ExportToSheetsClient() {
                   })
                 }
               >
-                Disconnect Google
+                断开 Google
               </button>
             ) : (
               <a href="/api/google/auth/start" className="primary-button">
-                Connect Google
+                连接 Google
               </a>
             )}
           </div>
@@ -424,20 +427,20 @@ export function ExportToSheetsClient() {
         {statusError ? <p className="error-text">{statusError}</p> : null}
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
-      </section>
-
-      {isBootstrapping ? (
-        <section className="panel">
-          <div className="stack">
-            <div className="skeleton-line skeleton-heading" />
-            <div className="skeleton-card" />
-            <div className="skeleton-card" />
-          </div>
         </section>
-      ) : null}
 
-      <div className="grid-2">
-        <section className="panel">
+        {isBootstrapping ? (
+          <section className="panel">
+            <div className="stack">
+              <div className="skeleton-line skeleton-heading" />
+              <div className="skeleton-card" />
+              <div className="skeleton-card" />
+            </div>
+          </section>
+        ) : null}
+
+        <div className="grid-2">
+          <section className="panel">
           <div className="split-header">
             <h2>可导出商品</h2>
             <span className="helper">仅显示 confirmed marketing copy</span>
@@ -492,9 +495,9 @@ export function ExportToSheetsClient() {
               );
             })}
           </div>
-        </section>
+          </section>
 
-        <section className="panel">
+          <section className="panel">
           <div className="split-header">
             <h2>导出配置</h2>
             <span className="helper">已选 {selectedProducts.length} 个商品</span>
@@ -608,7 +611,7 @@ export function ExportToSheetsClient() {
             })}
           </div>
 
-          <div className="button-row">
+          <div className="button-row primary-group">
             <button
               type="button"
               className="ghost-button"
@@ -632,7 +635,7 @@ export function ExportToSheetsClient() {
                 })
               }
             >
-              生成 Preview
+              生成预览
             </button>
             <button
               type="button"
@@ -660,7 +663,7 @@ export function ExportToSheetsClient() {
                 })
               }
             >
-              Confirm & Export
+              确认并导出
             </button>
           </div>
           {exportResult ? (
@@ -672,51 +675,52 @@ export function ExportToSheetsClient() {
               </a>
             </div>
           ) : null}
+          </section>
+        </div>
+
+        <section className="panel">
+          <div className="split-header">
+            <h2>Matrixify Preview</h2>
+            <span className="helper">{preview ? `${preview.rows.length} rows` : "先生成预览"}</span>
+          </div>
+          {!preview ? (
+            <div className="empty-state">点击 `生成预览` 后，这里会显示将写入 `Products` sheet 的 Matrixify 行。</div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
+                <thead>
+                  <tr>
+                    <th align="left">Handle</th>
+                    <th align="left">Title</th>
+                    <th align="left">Option1 Name</th>
+                    <th align="left">Option1 Value</th>
+                    <th align="left">Variant SKU</th>
+                    <th align="left">Price</th>
+                    <th align="left">Compare At</th>
+                    <th align="left">Inventory</th>
+                    <th align="left">Image Src</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.rows.map((row) => (
+                    <tr key={`${row.handle}-${row.option1Value}-${row.variantSku}`}>
+                      <td style={{ padding: "8px 0" }}>{row.handle}</td>
+                      <td>{row.title}</td>
+                      <td>{row.option1Name}</td>
+                      <td>{row.option1Value}</td>
+                      <td>{row.variantSku}</td>
+                      <td>{row.variantPrice}</td>
+                      <td>{row.variantCompareAtPrice}</td>
+                      <td>{row.variantInventoryQty}</td>
+                      <td style={{ maxWidth: 360, overflowWrap: "anywhere" }}>{row.imageSrc || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       </div>
-
-      <section className="panel">
-        <div className="split-header">
-          <h2>Matrixify Preview</h2>
-          <span className="helper">{preview ? `${preview.rows.length} rows` : "先生成预览"}</span>
-        </div>
-        {!preview ? (
-          <div className="empty-state">点击 `生成 Preview` 后，这里会显示将写入 `Products` sheet 的 Matrixify 行。</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
-              <thead>
-                <tr>
-                  <th align="left">Handle</th>
-                  <th align="left">Title</th>
-                  <th align="left">Option1 Name</th>
-                  <th align="left">Option1 Value</th>
-                  <th align="left">Variant SKU</th>
-                  <th align="left">Price</th>
-                  <th align="left">Compare At</th>
-                  <th align="left">Inventory</th>
-                  <th align="left">Image Src</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.rows.map((row) => (
-                  <tr key={`${row.handle}-${row.option1Value}-${row.variantSku}`}>
-                    <td style={{ padding: "8px 0" }}>{row.handle}</td>
-                    <td>{row.title}</td>
-                    <td>{row.option1Name}</td>
-                    <td>{row.option1Value}</td>
-                    <td>{row.variantSku}</td>
-                    <td>{row.variantPrice}</td>
-                    <td>{row.variantCompareAtPrice}</td>
-                    <td>{row.variantInventoryQty}</td>
-                    <td style={{ maxWidth: 360, overflowWrap: "anywhere" }}>{row.imageSrc || "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

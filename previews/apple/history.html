@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 历史记录</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip active" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>历史记录</h1>
+        <p>按阶段浏览文本、图像、编辑、文案和导出历史，并在右侧查看详情与关联资产。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="badge">58 records</span>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>历史记录</h2>
+                <p>通过标签切换不同工作流阶段，同时保留相同的筛选与列表逻辑。</p>
+              </div>
+              <span class="badge">58 records</span>
+            </div>
+
+            <div class="tabbar" data-tab-group="history-tabs">
+              <button class="tab-button active" data-tab-target="text">文本提取</button>
+              <button class="tab-button" data-tab-target="image">图片生成</button>
+              <button class="tab-button" data-tab-target="edit">图片编辑</button>
+              <button class="tab-button" data-tab-target="marketing">文案生成</button>
+              <button class="tab-button" data-tab-target="export">导出 Sheets</button>
+            </div>
+
+            <div data-tab-panels="history-tabs" style="margin-top: 18px;">
+              <div class="tab-panel" data-tab-panel="text">
+                <div class="grid-2">
+                  <div class="field">
+                    <label>搜索</label>
+                    <input class="text-input" value="丝绸之路" />
+                  </div>
+                  <div class="field">
+                    <label>状态</label>
+                    <select class="select"><option>成功</option></select>
+                  </div>
+                </div>
+                <div class="list-stack">
+                  <div class="history-card active">
+                    <div class="split">
+                      <strong>2026-03-27 14:31</strong>
+                      <span class="status-pill success">success</span>
+                    </div>
+                    <p class="muted list-summary">设计一枚以丝绸之路为主题的纪念币，正面要有骆驼和商队...</p>
+                  </div>
+                  <div class="history-card">
+                    <div class="split">
+                      <strong>2026-03-27 10:14</strong>
+                      <span class="status-pill success">success</span>
+                    </div>
+                    <p class="muted list-summary">设计一枚天文主题纪念币，背面体现星门和轨迹层次...</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" data-tab-panel="image" hidden>
+                <div class="list-stack">
+                  <div class="history-card active">
+                    <div class="split">
+                      <strong>img_job_2981</strong>
+                      <span class="status-pill success">completed</span>
+                    </div>
+                    <p class="muted list-summary">gpt-image-1 · 2048 × 2048 · 丝绸之路纪念币主图</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" data-tab-panel="edit" hidden>
+                <div class="list-stack">
+                  <div class="history-card active">
+                    <div class="split">
+                      <strong>edit_job_2041</strong>
+                      <span class="status-pill success">completed</span>
+                    </div>
+                    <p class="muted list-summary">来源图 source_01 · Front/Back 成功</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" data-tab-panel="marketing" hidden>
+                <div class="list-stack">
+                  <div class="history-card active">
+                    <div class="split">
+                      <strong>version_19</strong>
+                      <span class="status-pill warning">draft</span>
+                    </div>
+                    <p class="muted list-summary">纪念币 Shopify + Facebook 模板 v2</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-panel" data-tab-panel="export" hidden>
+                <div class="list-stack">
+                  <div class="history-card active">
+                    <div class="split">
+                      <strong>batch_20260327_01</strong>
+                      <span class="status-pill success">exported</span>
+                    </div>
+                    <p class="muted list-summary">3 products · Google Sheet 已创建</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>详情面板</h3>
+                  <p class="muted">右侧统一显示当前选中记录的关键信息</p>
+                </div>
+                <span class="soft-pill">Detail View</span>
+              </div>
+              <div class="mono-block">任务状态：success
+
+结构化字段：
+- 主题：丝绸之路纪念币
+- 正面元素：骆驼、商队、丝绸纹样
+- 背面元素：古城门、星轨、远山轮廓
+
+最终 Prompt：
+Create a premium commemorative coin themed around the Silk Road...</div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>关联资产</h3>
+                  <p class="muted">同一条历史记录下的图像、编辑与文案关系</p>
+                </div>
+                <span class="badge">Traceable</span>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card"><strong>图片生成</strong><span>img_job_2981</span></div>
+                <div class="metric-card"><strong>图片编辑</strong><span>edit_job_2041</span></div>
+                <div class="metric-card"><strong>文案版本</strong><span>version_19</span></div>
+                <div class="metric-card"><strong>导出批次</strong><span>batch_20260327_01</span></div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+  <script src="./preview.js"></script>
+</body>
+</html>

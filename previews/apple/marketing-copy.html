@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Copy Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 文案生成</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip active" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>文案生成</h1>
+        <p>组合来源图、编辑结果与模板，生成 Shopify 和 Facebook 的双语文案版本。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill success">2 Sources</span>
+        <a class="ghost-button" href="./edit-image.html">返回图片编辑</a>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid wide-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>素材与版本</h2>
+                <p>从来源图、正反面编辑结果和模板中组合出当前文案工作上下文。</p>
+              </div>
+              <span class="status-pill success">2 Sources</span>
+            </div>
+
+            <div class="list-stack">
+              <div class="list-item active">
+                <div class="split">
+                  <strong>source_01 · 丝绸之路纪念币</strong>
+                  <span class="badge">Has History</span>
+                </div>
+                <p class="muted list-summary">默认 front/back 编辑结果已选中，可直接进入版本生成与编辑。</p>
+              </div>
+              <div class="setting-card">
+                <div class="field">
+                  <label>Front 编辑结果</label>
+                  <select class="select"><option>front_job_2041 · 默认推荐</option></select>
+                </div>
+                <div class="field">
+                  <label>Back 编辑结果</label>
+                  <select class="select"><option>back_job_2041 · 默认推荐</option></select>
+                </div>
+                <div class="field">
+                  <label>文案模板</label>
+                  <select class="select"><option>纪念币 Shopify + Facebook 模板 v2</option></select>
+                </div>
+                <div class="field">
+                  <label>补充指令</label>
+                  <textarea class="textarea">强调“收藏级工艺”和“礼赠场景”，避免过度营销语气，英文标题保持克制。</textarea>
+                </div>
+                <div class="button-row primary-group stacked-mobile">
+                  <button class="primary-button">生成新版本</button>
+                  <button class="secondary-button">刷新版本列表</button>
+                </div>
+              </div>
+
+              <div class="list-item">
+                <div class="split">
+                  <strong>version_18</strong>
+                  <span class="status-pill success">confirmed</span>
+                </div>
+                <p class="muted list-summary">今天 15:06 · Shopify 标题已确认，可直接进入导出。</p>
+              </div>
+              <div class="list-item active">
+                <div class="split">
+                  <strong>version_19</strong>
+                  <span class="status-pill warning">draft</span>
+                </div>
+                <p class="muted list-summary">今天 15:22 · 当前正在编辑的草稿版本。</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>Shopify 文案</h3>
+                  <p class="muted">标题、卖点与描述保持双语并排，但视觉上以内容块而非表格组织</p>
+                </div>
+                <span class="soft-pill">Draft Editing</span>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label>中文标题</label>
+                  <input class="text-input" value="丝绸之路浮雕纪念币" />
+                </div>
+                <div class="field">
+                  <label>English Title</label>
+                  <input class="text-input" value="Silk Road Relief Commemorative Coin" />
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label>中文描述</label>
+                  <textarea class="textarea">以丝绸之路为灵感，将骆驼商队、古城门与星轨元素压缩进双面浮雕结构，兼具收藏价值与陈列质感。</textarea>
+                </div>
+                <div class="field">
+                  <label>English Description</label>
+                  <textarea class="textarea">A collectible coin inspired by the Silk Road, combining caravans, ancient gates, and celestial motion into a refined dual-side relief composition.</textarea>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>Facebook 文案</h3>
+                  <p class="muted">更短、更适合投放，但仍保持同一语言气质</p>
+                </div>
+                <span class="badge">Channel Copy</span>
+              </div>
+              <div class="result-columns">
+                <div class="mono-block">中文短文案
+
+把丝绸之路的流动感压进一枚收藏级纪念币。双面浮雕、细节克制、适合礼赠与陈列。</div>
+                <div class="mono-block">English Short Copy
+
+Capture the motion of the Silk Road in a collectible-grade commemorative coin. Refined relief, calm luxury, display-ready finish.</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="page-actions">
+                <div>
+                  <h3 style="margin: 0 0 8px;">版本操作</h3>
+                  <p class="muted">预览稿里强调操作节奏，不模拟真实提交。</p>
+                </div>
+                <span class="status-pill success">Ready to Confirm</span>
+              </div>
+              <div class="page-actions" style="margin-top: 8px;">
+                <div class="button-row primary-group stacked-mobile">
+                  <button class="primary-button">确认当前版本</button>
+                  <button class="secondary-button">保存草稿</button>
+                </div>
+                <a class="ghost-button" href="./export-to-sheets.html">前往导出</a>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

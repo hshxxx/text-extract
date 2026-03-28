@@ -4,9 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node ./scripts/dev-local.mjs",
     "build": "next build",
     "start": "next start",
-    "test": "vitest run"
+    "test": "vitest run",
+    "env:link": "node ./scripts/env-link.mjs",
+    "env:check": "node ./scripts/env-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

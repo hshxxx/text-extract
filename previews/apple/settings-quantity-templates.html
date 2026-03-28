@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantity Template Settings Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 数量模板</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip active" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>数量模板</h1>
+        <p>维护 Matrixify 导出时的数量层级、SKU 与价格规则，并保留可复用的模板资产。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="soft-pill">Quantity Variants</span>
+      </div>
+    </section>
+
+    <div class="subnav-wrap">
+      <nav class="subnav-chips">
+        <a class="subnav-chip" href="./settings-models.html">模型配置</a>
+        <a class="subnav-chip" href="./settings-templates.html">模板管理</a>
+        <a class="subnav-chip active" href="./settings-quantity-templates.html">数量模板</a>
+      </nav>
+    </div>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>数量模板编辑</h2>
+                <p>维护 Matrixify 导出时的 Quantity variants。系统预置模板只读，自定义模板支持设为默认。</p>
+              </div>
+              <span class="soft-pill">Quantity Variants</span>
+            </div>
+            <div class="field">
+              <label>模板名称</label>
+              <input class="text-input" value="礼品装默认模板" />
+            </div>
+            <label class="toggle-row helper-text" style="margin-bottom: 16px;"><input type="checkbox" checked /> 设为我的默认数量模板</label>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Option1 Name</th>
+                    <th>Option1 Value</th>
+                    <th>Variant SKU</th>
+                    <th>Price</th>
+                    <th>Compare At</th>
+                    <th>Inventory</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Pack</td>
+                    <td>1 Piece</td>
+                    <td>SR-COIN-1PC</td>
+                    <td>89.00</td>
+                    <td>109.00</td>
+                    <td>120</td>
+                  </tr>
+                  <tr>
+                    <td>Pack</td>
+                    <td>2 Pieces</td>
+                    <td>SR-COIN-2PC</td>
+                    <td>168.00</td>
+                    <td>198.00</td>
+                    <td>64</td>
+                  </tr>
+                  <tr>
+                    <td>Pack</td>
+                    <td>Gift Box Set</td>
+                    <td>SR-COIN-GIFT</td>
+                    <td>219.00</td>
+                    <td>249.00</td>
+                    <td>28</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="button-row primary-group stacked-mobile" style="margin-top: 18px;">
+              <button class="primary-button">保存模板</button>
+              <button class="secondary-button">取消编辑</button>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>已有数量模板</h3>
+                  <p class="muted">系统模板与自定义模板共用同一列表设计</p>
+                </div>
+                <span class="badge">4 items</span>
+              </div>
+              <div class="list-stack">
+                <div class="setting-card active">
+                  <div class="split">
+                    <div>
+                      <strong>礼品装默认模板</strong>
+                      <p class="muted">自定义模板 · 默认</p>
+                    </div>
+                    <div class="button-row stacked-mobile">
+                      <button class="ghost-button">编辑</button>
+                      <button class="danger-button">删除</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-card">
+                  <div class="split">
+                    <div>
+                      <strong>基础单枚模板</strong>
+                      <p class="muted">系统模板</p>
+                    </div>
+                    <span class="soft-pill">Read Only</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>模板摘要</h3>
+                  <p class="muted">帮助快速判断模板是否适合导出场景</p>
+                </div>
+                <span class="soft-pill">Summary</span>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card"><strong>3</strong><span>数量层级</span></div>
+                <div class="metric-card"><strong>$89</strong><span>起始价格</span></div>
+                <div class="metric-card"><strong>Gift Box</strong><span>最高规格</span></div>
+                <div class="metric-card"><strong>212</strong><span>总库存</span></div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

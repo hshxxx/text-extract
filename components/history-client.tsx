@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   EditHistoryDetail,
   EditHistoryItem,
@@ -332,12 +333,14 @@ export function HistoryClient({
     selectedMarketing?.version.final_result_json ?? selectedMarketing?.version.draft_result_json ?? null;
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>历史记录</h1>
-          <p>文本提取、图片生成、图片编辑和营销文案都会在这里保留可追溯历史。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="历史记录"
+        description="按文本、图片、编辑、文案和导出分组查看历史任务，左侧检索，右侧展开详情。"
+        actions={<span className="status-pill">Traceable</span>}
+      />
+      <div className="grid-2">
+        <section className="panel">
         <div className="tab-row" style={{ marginBottom: 16 }}>
           <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("text")}>
             文本提取
@@ -704,9 +707,9 @@ export function HistoryClient({
             ))}
           </div>
         )}
-      </section>
+        </section>
 
-      <section className="stack">
+        <section className="stack">
         {activeTab === "text" ? (
           <>
             <div className="panel">
@@ -1008,7 +1011,8 @@ export function HistoryClient({
             </div>
           </>
         )}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

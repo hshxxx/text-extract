@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   GenerateMarketingCopyRequest,
   MarketingCopyBootstrapResponse,
@@ -422,12 +423,20 @@ export function MarketingCopyClient({
   const selectedBackOption = sourceDetail?.backOptions.find((item) => item.id === selectedBackEditJobId) ?? null;
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>Shopify 与 Facebook 文案生成</h1>
-          <p>基于主题原文、双面商品图与预置模板，生成双语 Shopify 商品文案和 Facebook 广告文案。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="文案生成"
+        description="基于主题原文、双面商品图与模板，生成并编辑双语 Shopify 与 Facebook 文案。"
+        actions={<span className="status-pill">Bilingual Copy</span>}
+      />
+      <div className="grid-2">
+        <section className="panel">
+          <div className="section-header">
+            <div>
+              <h2>素材列表</h2>
+              <p className="lead">选择来源图后，在右侧指定 Front / Back 成品图、模板和补充要求。</p>
+            </div>
+          </div>
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -501,11 +510,11 @@ export function MarketingCopyClient({
             </button>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section className="stack">
-        <div className="panel">
-          <h2>素材组合</h2>
+        <section className="stack">
+          <div className="panel">
+            <h2>当前素材组合</h2>
           {sourceDetail ? (
             <div className="stack">
               <div className="image-frame">
@@ -572,7 +581,7 @@ export function MarketingCopyClient({
                   onChange={(event) => setUserInstruction(event.target.value)}
                 />
               </div>
-              <div className="button-row">
+              <div className="button-row primary-group">
                 <button
                   type="button"
                   className="primary-button"
@@ -615,7 +624,7 @@ export function MarketingCopyClient({
                     })
                   }
                 >
-                  {isPending ? "生成中..." : "Generate Marketing Copy"}
+                  {isPending ? "生成中..." : "生成文案"}
                 </button>
               </div>
             </div>
@@ -624,10 +633,10 @@ export function MarketingCopyClient({
           ) : (
             <div className="empty-state">选择左侧素材后，这里会展示可用的 front/back 成品图和模板设置。</div>
           )}
-        </div>
+          </div>
 
-        <div className="panel">
-          <h2>历史版本</h2>
+          <div className="panel">
+            <h2>历史版本</h2>
           <ListControls
             searchValue={versionQuery}
             onSearchChange={(value) => {
@@ -685,19 +694,19 @@ export function MarketingCopyClient({
               ))}
             </div>
           )}
-        </div>
-
-        <div className="panel">
-          <div className="split-header">
-            <div>
-              <h2>编辑文案</h2>
-              <p className="helper">支持字段级编辑、保存 final 版本，并在同一素材组合下切换 confirmed。</p>
-            </div>
-            {activeVersion?.version.is_confirmed ? <span className="badge">Confirmed</span> : null}
           </div>
-          {error ? <p className="error-text">{error}</p> : null}
-          {editableResult && activeVersion ? (
-            <div className="stack">
+
+          <div className="panel">
+            <div className="split-header">
+              <div>
+                <h2>编辑文案</h2>
+                <p className="helper">支持字段级编辑、保存 final 版本，并在同一素材组合下切换 confirmed。</p>
+              </div>
+              {activeVersion?.version.is_confirmed ? <span className="badge">Confirmed</span> : null}
+            </div>
+            {error ? <p className="error-text">{error}</p> : null}
+            {editableResult && activeVersion ? (
+              <div className="stack">
               <div className="grid-2">
                 <div className="field">
                   <label>Shopify Title EN</label>
@@ -902,12 +911,13 @@ export function MarketingCopyClient({
                   Confirm Version
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
-          )}
-        </div>
-      </section>
+              </div>
+            ) : (
+              <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

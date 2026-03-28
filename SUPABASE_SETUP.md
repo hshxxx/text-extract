@@ -32,6 +32,10 @@
 Auth > URL Configuration 中至少加入以下 Redirect URL：
 
 - `http://localhost:3000/api/auth/callback`
+- `http://localhost:3001/api/auth/callback`
+- `http://localhost:3002/api/auth/callback`
+- `http://localhost:3003/api/auth/callback`
+- 建议一次性补齐 `http://localhost:3000` 到 `http://localhost:3010` 的 `/api/auth/callback`
 - `https://ai-prompt-structurer-hshxxx-hshxxxs-projects.vercel.app/api/auth/callback`
 - `https://ai-prompt-structurer.vercel.app/api/auth/callback`
 - `https://<your-project>.vercel.app/api/auth/callback`
@@ -41,12 +45,17 @@ Auth > URL Configuration 中至少加入以下 Redirect URL：
 
 如果你启用了 Google OAuth，还需要在 Google Cloud Console 的 OAuth redirect URI 中补齐：
 
+- `http://localhost:3000/api/google/auth/callback`
+- `http://localhost:3001/api/google/auth/callback`
+- `http://localhost:3002/api/google/auth/callback`
+- `http://localhost:3003/api/google/auth/callback`
+- 建议一次性补齐 `http://localhost:3000` 到 `http://localhost:3010` 的 `/api/google/auth/callback`
 - `https://ai-prompt-structurer-hshxxx-hshxxxs-projects.vercel.app/api/google/auth/callback`
 - `https://ai-prompt-structurer.vercel.app/api/google/auth/callback`
 
 ## 4. Fill Local Env
 
-把以下值写入 [.env.local](/Users/hsh/Desktop/codex/challenge-coin-2/.env.local)：
+把以下值写入 `~/.config/ai-prompt-structurer/.env.local`：
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=你的 Supabase Project URL
@@ -61,9 +70,18 @@ GOOGLE_CLIENT_SECRET=可选，启用 Google OAuth 时必填
 GOOGLE_OAUTH_REDIRECT_URI=可选，本地可留空，线上按部署域名单独填写
 ```
 
+然后在每个新 worktree 根目录运行：
+
+```bash
+npm run env:link
+npm run env:check
+```
+
 ## 5. Notes
 
 - 当前应用主要依赖 `NEXT_PUBLIC_SUPABASE_URL` 与 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 完成登录和业务访问。
+- 当前仓库约定每个 worktree 的 `.env.local` 都是指向 `~/.config/ai-prompt-structurer/.env.local` 的软链接，不再手工复制 secrets。
+- 日常本地启动请统一使用 `npm run dev:local`，不要直接依赖 `npm run dev`。
 - `SUPABASE_SERVICE_ROLE_KEY` 已预留给后续后台任务或管理动作，现阶段不会下发到浏览器。
 - 本地环境已可填写 Supabase 凭据，但数据库迁移仍需要在 Supabase SQL Editor 或用具备数据库权限的连接方式执行。
 - 如果你使用 Vercel 默认域名、自定义域名和稳定 Preview alias，请把这些正式回调地址都加进 Supabase Auth 的 Redirect URLs。

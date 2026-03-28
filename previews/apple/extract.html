@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Extract Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">codex-integration@example.com</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip active" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>文本解析</h1>
+        <p>输入原始需求，生成结构化字段与最终 Prompt，作为后续图像与文案流程的起点。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill success">Ready</span>
+        <a class="ghost-button" href="./settings-templates.html">查看模板</a>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>固定 Schema 文本解析</h2>
+                <p>输入原始需求，系统提取 7 个标准字段，并按模板输出最终 Prompt。</p>
+              </div>
+              <span class="status-pill success">Ready</span>
+            </div>
+
+            <div class="field">
+              <label for="raw-input">待解析文本</label>
+              <textarea id="raw-input" class="textarea large">设计一枚以丝绸之路为主题的纪念币。正面要有骆驼、商队和飘动的丝绸纹样，背面体现古城门、星轨和远山轮廓。整体风格偏金属浮雕，细节精致，适合高端收藏品视觉。</textarea>
+              <div class="page-actions" style="margin-top: 10px;">
+                <span class="helper-text">建议输入完整、具体、可执行的需求描述</span>
+                <span class="helper-text">234 / 4000</span>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="setting-card active">
+                <div class="section-header" style="margin-bottom: 14px;">
+                  <div>
+                    <h3>模型配置</h3>
+                    <p class="muted">按名称、模型、Base URL 搜索</p>
+                  </div>
+                  <span class="badge">默认</span>
+                </div>
+                <div class="field"><input class="text-input" value="联调文本模型 · gpt-5.4" /></div>
+                <div class="grid-2">
+                  <div class="field">
+                    <label>筛选</label>
+                    <select class="select"><option>全部模型</option></select>
+                  </div>
+                  <div class="field">
+                    <label>每页条数</label>
+                    <select class="select"><option>10</option></select>
+                  </div>
+                </div>
+                <div class="page-actions">
+                  <span class="helper-text">共 1 条 · 第 1 / 1 页</span>
+                  <div class="button-row">
+                    <button class="ghost-button">上一页</button>
+                    <button class="ghost-button">下一页</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <div class="section-header" style="margin-bottom: 14px;">
+                  <div>
+                    <h3>模板</h3>
+                    <p class="muted">按模板名、内容搜索</p>
+                  </div>
+                  <span class="badge">纪念币默认模板</span>
+                </div>
+                <div class="field"><input class="text-input" value="纪念币默认模板" /></div>
+                <div class="grid-2">
+                  <div class="field">
+                    <label>筛选</label>
+                    <select class="select"><option>全部模板</option></select>
+                  </div>
+                  <div class="field">
+                    <label>每页条数</label>
+                    <select class="select"><option>10</option></select>
+                  </div>
+                </div>
+                <div class="page-actions">
+                  <span class="helper-text">共 3 条 · 第 1 / 1 页</span>
+                  <div class="button-row">
+                    <button class="ghost-button">上一页</button>
+                    <button class="ghost-button">下一页</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="page-actions" style="margin-top: 22px;">
+              <div class="button-row primary-group stacked-mobile">
+                <button class="primary-button">开始生成</button>
+                <button class="secondary-button">查看模板字段</button>
+              </div>
+              <div class="aside-note">核心变化：收敛卡片数量，让输入区成为第一视觉焦点，参数区成为输入的延伸，而不是另一套页面。</div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>结构化字段</h3>
+                  <p class="muted">固定输出字段共 7 项</p>
+                </div>
+                <span class="status-pill success">Success</span>
+              </div>
+              <div class="schema-grid">
+                <div class="schema-item"><strong>主题</strong><span>丝绸之路纪念币</span></div>
+                <div class="schema-item"><strong>正面元素</strong><span>骆驼、商队、丝绸纹样</span></div>
+                <div class="schema-item"><strong>背面元素</strong><span>古城门、星轨、远山轮廓</span></div>
+                <div class="schema-item"><strong>材质</strong><span>金属质感、精致浮雕</span></div>
+                <div class="schema-item"><strong>风格</strong><span>高端收藏品、克制奢华</span></div>
+                <div class="schema-item"><strong>细节要求</strong><span>轮廓清晰、雕刻层次明显</span></div>
+                <div class="schema-item"><strong>补充说明</strong><span>适合后续图像生成与营销文案</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>最终 Prompt</h3>
+                  <p class="muted">按模板渲染后的结果</p>
+                </div>
+                <span class="soft-pill">Rendered</span>
+              </div>
+              <div class="mono-block">Create a premium commemorative coin themed around the Silk Road. Front side should feature camels, merchants, and flowing silk patterns. Back side should feature an ancient city gate, star trails, and distant mountains. Use refined metallic relief, collectible-grade detail, crisp contours, and a calm luxury finish suitable for premium product imagery.</div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>原始模型输出</h3>
+                  <p class="muted">便于排查 JSON 修复与字段校验</p>
+                </div>
+                <span class="soft-pill">Debug View</span>
+              </div>
+              <div class="mono-block">{
+  "theme": "丝绸之路纪念币",
+  "front_elements": ["骆驼", "商队", "丝绸纹样"],
+  "back_elements": ["古城门", "星轨", "远山轮廓"],
+  "material": "金属浮雕",
+  "style": "高端收藏品"
+}</div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

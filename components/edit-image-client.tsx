@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   CreateEditTaskResponse,
   EditTaskDetailResponse,
@@ -269,12 +270,20 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
   }
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>图片编辑</h1>
-          <p>基于图片生成结果自动拆分正反面，生成两张适合商品展示的纪念币成品图。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="图片编辑"
+        description="从来源图片中选择一张作为当前编辑对象，生成 Front 与 Back 两张商品成品图。"
+        actions={<span className="status-pill">Front / Back</span>}
+      />
+      <div className="grid-2">
+        <section className="panel">
+          <div className="section-header">
+            <div>
+              <h2>来源图片列表</h2>
+              <p className="lead">左侧负责筛选与选择来源图，右侧负责当前选中图的编辑与结果查看。</p>
+            </div>
+          </div>
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -345,61 +354,61 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
             </button>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section className="stack">
-        <div className="panel">
-          <h2>来源图片</h2>
-          {selectedSource ? (
-            <div className="stack">
-              <div className="image-frame">
-                <img src={selectedSource.imageUrl} alt="selected source" className="generated-image" />
+        <section className="stack">
+          <div className="panel">
+            <h2>当前来源图</h2>
+            {selectedSource ? (
+              <div className="stack">
+                <div className="image-frame">
+                  <img src={selectedSource.imageUrl} alt="selected source" className="generated-image" />
+                </div>
+                <div className="button-row primary-group">
+                  <button
+                    type="button"
+                    className="primary-button"
+                    disabled={isPending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        setActiveTaskId(null);
+                        setResult(null);
+                        setError(null);
+                        const response = await fetch("/api/edit-image", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ source_image_id: selectedSource.id }),
+                        });
+                        const data = (await response.json()) as EditResultState & { error?: string };
+
+                        if (!response.ok) {
+                          setError(data.error ?? "创建图片编辑任务失败。");
+                          return;
+                        }
+
+                        setActiveTaskId(data.task_id);
+                        setResult(data);
+                        updateSourceStatus(data.task_id, resolveTaskStatus(data) ?? "failed");
+                      })
+                    }
+                  >
+                    {isPending ? "处理中..." : "开始编辑"}
+                  </button>
+                  {sourceHistory.some((item) => item.frontImage) && sourceHistory.some((item) => item.backImage) ? (
+                    <Link href={`/marketing-copy?source=${selectedSource.id}`} className="ghost-button">
+                      前往文案生成
+                    </Link>
+                  ) : null}
+                </div>
               </div>
-              <div className="button-row">
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={isPending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      setActiveTaskId(null);
-                      setResult(null);
-                      setError(null);
-                      const response = await fetch("/api/edit-image", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ source_image_id: selectedSource.id }),
-                      });
-                      const data = (await response.json()) as EditResultState & { error?: string };
+            ) : (
+              <div className="empty-state">选择左侧来源图片后，这里会显示预览和生成入口。</div>
+            )}
+            {error ? <p className="error-text">{error}</p> : null}
+          </div>
 
-                      if (!response.ok) {
-                        setError(data.error ?? "创建图片编辑任务失败。");
-                        return;
-                      }
-
-                      setActiveTaskId(data.task_id);
-                      setResult(data);
-                      updateSourceStatus(data.task_id, resolveTaskStatus(data) ?? "failed");
-                    })
-                  }
-                >
-                  {isPending ? "处理中..." : "Generate"}
-                </button>
-                {sourceHistory.some((item) => item.frontImage) && sourceHistory.some((item) => item.backImage) ? (
-                  <Link href={`/marketing-copy?source=${selectedSource.id}`} className="ghost-button">
-                    Generate Marketing Copy
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          ) : (
-            <div className="empty-state">选择左侧来源图片后，这里会显示预览和生成入口。</div>
-          )}
-          {error ? <p className="error-text">{error}</p> : null}
-        </div>
-
-        <div className="panel">
-          <h2>编辑结果</h2>
+          <div className="panel">
+            <h2>编辑结果</h2>
           {result ? (
             <div className="stack">
               <p className="subtle">主任务状态：{resolveTaskStatus(result)}</p>
@@ -446,7 +455,7 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
                           })
                         }
                       >
-                        Retry Front
+                        重试 Front
                       </button>
                     </div>
                   ) : null}
@@ -484,7 +493,7 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
                           })
                         }
                       >
-                        Retry Back
+                        重试 Back
                       </button>
                     </div>
                   ) : null}
@@ -494,52 +503,53 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
           ) : (
             <div className="empty-state">生成后会在这里展示 front/back 两张商品图。</div>
           )}
-        </div>
+          </div>
 
-        <div className="panel">
-          <h2>该图片历史编辑结果</h2>
-          {historyError ? <p className="error-text">{historyError}</p> : null}
-          {selectedSource ? (
-            sourceHistory.length > 0 ? (
-              <div className="stack">
-                {sourceHistory.map((item) => (
-                  <article key={item.taskId} className="list-card">
-                    <header>
-                      <div>
-                        <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                        <div className="subtle">
-                          Front: {item.frontStatus ?? "未开始"} · Back: {item.backStatus ?? "未开始"}
+          <div className="panel">
+            <h2>该图片历史编辑结果</h2>
+            {historyError ? <p className="error-text">{historyError}</p> : null}
+            {selectedSource ? (
+              sourceHistory.length > 0 ? (
+                <div className="stack">
+                  {sourceHistory.map((item) => (
+                    <article key={item.taskId} className="list-card">
+                      <header>
+                        <div>
+                          <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
+                          <div className="subtle">
+                            Front: {item.frontStatus ?? "未开始"} · Back: {item.backStatus ?? "未开始"}
+                          </div>
+                        </div>
+                        <span className="status">{item.status}</span>
+                      </header>
+                      <div className="grid-2" style={{ marginTop: 12 }}>
+                        <div className="history-image-thumb">
+                          {item.frontImage ? (
+                            <img src={item.frontImage} alt="front history result" className="generated-image" />
+                          ) : (
+                            <div className="empty-state">暂无 Front</div>
+                          )}
+                        </div>
+                        <div className="history-image-thumb">
+                          {item.backImage ? (
+                            <img src={item.backImage} alt="back history result" className="generated-image" />
+                          ) : (
+                            <div className="empty-state">暂无 Back</div>
+                          )}
                         </div>
                       </div>
-                      <span className="status">{item.status}</span>
-                    </header>
-                    <div className="grid-2" style={{ marginTop: 12 }}>
-                      <div className="history-image-thumb">
-                        {item.frontImage ? (
-                          <img src={item.frontImage} alt="front history result" className="generated-image" />
-                        ) : (
-                          <div className="empty-state">暂无 Front</div>
-                        )}
-                      </div>
-                      <div className="history-image-thumb">
-                        {item.backImage ? (
-                          <img src={item.backImage} alt="back history result" className="generated-image" />
-                        ) : (
-                          <div className="empty-state">暂无 Back</div>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">这张来源图还没有成功的历史编辑结果。</div>
+              )
             ) : (
-              <div className="empty-state">这张来源图还没有成功的历史编辑结果。</div>
-            )
-          ) : (
-            <div className="empty-state">选择左侧来源图后，这里会显示该图片过去的成功编辑结果。</div>
-          )}
-        </div>
-      </section>
+              <div className="empty-state">选择左侧来源图后，这里会显示该图片过去的成功编辑结果。</div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

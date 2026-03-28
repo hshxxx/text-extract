@@ -15,8 +15,7 @@ const NAV_ITEMS = [
   { href: "/edit-image", label: "图片编辑" },
   { href: "/marketing-copy", label: "文案生成" },
   { href: "/export-to-sheets", label: "导出 Sheets" },
-  { href: "/settings/models", label: "模型配置" },
-  { href: "/settings/templates", label: "模板管理" },
+  { href: "/settings", label: "模型模板管理" },
   { href: "/history", label: "历史记录" },
 ];
 
@@ -33,10 +32,13 @@ export function AppShell({ children }: AppShellProps) {
     <div className="page-shell">
       <header className="app-header">
         <div className="brand-block">
-          <h1>AI Prompt Structurer</h1>
-          <p>{userEmail ?? "未登录"} · 固定 Schema Prompt 生成器</p>
+          <div className="brand-mark">STRUCTURED PROMPT WORKSPACE</div>
+          <Link href="/" className="brand-title">
+            AI Prompt Structurer
+          </Link>
+          <p>{userEmail ?? "未登录"} · 结构化工作流界面</p>
         </div>
-        <div className="stack" style={{ gap: 12, alignItems: "flex-end" }}>
+        <div className="header-actions">
           <nav className="nav-links">
             {NAV_ITEMS.map((item) => (
               <Link

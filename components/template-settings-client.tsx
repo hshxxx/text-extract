@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { SettingsSubnav } from "@/components/settings-subnav";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type { TemplateRecord } from "@/lib/types/domain";
 import { FIXED_SCHEMA_FIELDS } from "@/lib/types/domain";
 import { normalizeSearchQuery, paginateItems } from "@/utils/pagination";
@@ -123,12 +125,21 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
   }
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>模板管理</h1>
-          <p>模板应直接描述纪念币画面本身，不要写成“请生成一段 Prompt”这类元指令。未知占位符会在保存时被拒绝。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="模型模板管理"
+        description="统一维护可复用模板与字段约束。当前页用于编辑文本解析模板。"
+        actions={<span className="status-pill">Template Rules</span>}
+      />
+      <SettingsSubnav />
+      <div className="grid-2">
+        <section className="panel">
+          <div className="section-header">
+            <div>
+              <h2>模板编辑</h2>
+              <p className="lead">模板应直接描述纪念币画面本身，不要写成“请生成一段 Prompt”这类元指令。</p>
+            </div>
+          </div>
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -170,10 +181,10 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
         </div>
         {message ? <p className="helper">{message}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
-      </section>
+        </section>
 
-      <section className="stack">
-        <div className="panel">
+        <section className="stack">
+          <div className="panel">
           <h2>可用字段</h2>
           <div className="data-grid">
             {FIXED_SCHEMA_FIELDS.map((field) => (
@@ -183,8 +194,8 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
               </div>
             ))}
           </div>
-        </div>
-        <div className="panel">
+          </div>
+          <div className="panel">
           <h2>模板预览</h2>
           {content ? (
             <>
@@ -196,8 +207,8 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
           ) : (
             <div className="empty-state">编辑模板内容后，这里会显示实时预览。</div>
           )}
-        </div>
-        <div className="panel">
+          </div>
+          <div className="panel">
           <h2>已有模板</h2>
           <ListControls
             searchValue={query}
@@ -276,8 +287,9 @@ export function TemplateSettingsClient({ initialItems }: { initialItems: Templat
               </article>
             ))}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

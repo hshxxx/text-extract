@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Image Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 图片编辑</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip active" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>图片编辑</h1>
+        <p>从来源图中选择一张白底双币图，自动拆分正反面，并生成更适合商品展示的成品图。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill success">3 Ready</span>
+        <a class="ghost-button" href="./generate-image.html">返回来源图</a>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>来源图片</h2>
+                <p>从图片生成结果中选择一张白底双币图，自动拆分正反面并生成商品展示图。</p>
+              </div>
+              <span class="status-pill success">3 Ready</span>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>搜索</label>
+                <input class="text-input" value="丝绸之路" />
+              </div>
+              <div class="field">
+                <label>筛选</label>
+                <select class="select"><option>仅未编辑</option></select>
+              </div>
+            </div>
+
+            <div class="list-stack">
+              <div class="list-item active">
+                <div class="split">
+                  <strong>source_01 · 今天 14:35</strong>
+                  <span class="badge">Not Edited</span>
+                </div>
+                <div class="image-frame" style="margin-top: 12px;">
+                  <div class="image-mock coin-scene">
+                    <div class="coin-line one"></div>
+                    <div class="coin-line two"></div>
+                    <div class="coin-line three"></div>
+                    <div class="coin-line four"></div>
+                  </div>
+                </div>
+                <p class="muted list-summary" style="margin-top: 12px;">最近状态：尚未创建编辑任务</p>
+              </div>
+
+              <div class="list-item">
+                <div class="split">
+                  <strong>source_02 · 今天 11:20</strong>
+                  <span class="soft-pill">Edited</span>
+                </div>
+                <div class="image-frame" style="margin-top: 12px;"><div class="image-mock"></div></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>当前来源图</h3>
+                  <p class="muted">创建任务后自动轮询状态，保持界面稳定</p>
+                </div>
+                <span class="status-pill warning">Processing</span>
+              </div>
+              <div class="image-frame">
+                <div class="image-mock coin-scene">
+                  <div class="coin-line one"></div>
+                  <div class="coin-line two"></div>
+                  <div class="coin-line three"></div>
+                  <div class="coin-line four"></div>
+                </div>
+              </div>
+              <div class="page-actions" style="margin-top: 14px;">
+                <div class="button-row primary-group stacked-mobile">
+                  <button class="primary-button">开始编辑</button>
+                </div>
+                <a class="ghost-button" href="./marketing-copy.html">Generate Marketing Copy</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>编辑结果</h3>
+                  <p class="muted">Front / Back 两张商品展示图</p>
+                </div>
+                <span class="soft-pill">partial_success</span>
+              </div>
+              <div class="result-columns">
+                <div class="image-frame">
+                  <div class="image-mock" style="min-height: 220px;"></div>
+                </div>
+                <div class="image-frame">
+                  <div class="image-mock" style="min-height: 220px;"></div>
+                </div>
+              </div>
+              <div class="mini-stat-row" style="margin-top: 14px;">
+                <div class="mini-stat"><strong>Front</strong><span>completed</span></div>
+                <div class="mini-stat"><strong>Back</strong><span>completed</span></div>
+                <div class="mini-stat"><strong>Upload</strong><span>done</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>历史编辑结果</h3>
+                  <p class="muted">最近 2 次编辑保留在右侧连续面板中</p>
+                </div>
+                <span class="badge">2 records</span>
+              </div>
+              <div class="list-stack">
+                <div class="history-card active">
+                  <div class="split">
+                    <strong>edit_job_2041</strong>
+                    <span class="status-pill success">completed</span>
+                  </div>
+                  <p class="muted list-summary">今天 14:42 · 输出两张商品展示图，可直接进入文案生成。</p>
+                </div>
+                <div class="history-card">
+                  <div class="split">
+                    <strong>edit_job_2016</strong>
+                    <span class="status-pill warning">partial_success</span>
+                  </div>
+                  <p class="muted list-summary">今天 13:18 · Front 成功，Back 需要重试。</p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

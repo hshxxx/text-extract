@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate Image Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 图片生成</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip active" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>图片生成</h1>
+        <p>选择已经验证过的 Prompt，设定模型与尺寸后生成主图，并继续进入图片编辑。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="status-pill warning">Queued</span>
+        <button class="ghost-button">刷新 Prompt</button>
+      </div>
+    </section>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>Prompt 列表</h2>
+                <p>最近生成成功的 Prompt 会先进入候选区，再进行图片尺寸与模型选择。</p>
+              </div>
+              <button class="ghost-button">刷新 Prompt</button>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label>搜索</label>
+                <input class="text-input" value="丝绸之路" />
+              </div>
+              <div class="field">
+                <label>筛选</label>
+                <select class="select"><option>近 7 天</option></select>
+              </div>
+            </div>
+
+            <div class="page-actions" style="margin-bottom: 16px;">
+              <span class="helper-text">共 12 条 · 第 1 / 2 页</span>
+              <div class="button-row">
+                <button class="ghost-button">上一页</button>
+                <button class="ghost-button">下一页</button>
+              </div>
+            </div>
+
+            <div class="list-stack">
+              <div class="list-item active">
+                <div class="split">
+                  <strong>今天 14:32</strong>
+                  <span class="badge">Selected</span>
+                </div>
+                <p class="muted list-summary">Create a premium commemorative coin themed around the Silk Road...</p>
+              </div>
+              <div class="list-item">
+                <div class="split">
+                  <strong>今天 11:08</strong>
+                  <span class="soft-pill">Ready</span>
+                </div>
+                <p class="muted list-summary">Create a commemorative medal focused on astronomy, layered metallic relief...</p>
+              </div>
+              <div class="list-item">
+                <div class="split">
+                  <strong>昨天 20:17</strong>
+                  <span class="soft-pill">Ready</span>
+                </div>
+                <p class="muted list-summary">Design a high-end coin with twin dragons, cloud patterns, and antique silver finish...</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>Prompt 预览</h3>
+                  <p class="muted">完整生成内容</p>
+                </div>
+                <span class="soft-pill">Prompt Source</span>
+              </div>
+              <div class="mono-block">Create a premium commemorative coin themed around the Silk Road. Front side should feature camels, merchants, and flowing silk patterns. Back side should feature an ancient city gate, star trails, and distant mountains. Use refined metallic relief, collectible-grade detail, crisp contours, and a calm luxury finish suitable for premium product imagery.</div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>图片设置</h3>
+                  <p class="muted">模型与尺寸选择保持轻量，但足够清晰</p>
+                </div>
+                <span class="status-pill warning">Queued</span>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label>图片模型</label>
+                  <select class="select"><option>高清图像模型 · gpt-image-1</option></select>
+                </div>
+                <div class="field">
+                  <label>图片尺寸</label>
+                  <select class="select"><option>2048 × 2048</option></select>
+                </div>
+              </div>
+              <div class="page-actions">
+                <div class="button-row primary-group stacked-mobile">
+                  <button class="primary-button">开始生成</button>
+                  <button class="secondary-button">下载图片</button>
+                </div>
+                <a class="ghost-button" href="./edit-image.html">前往图片编辑</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>生成结果</h3>
+                  <p class="muted">模型：gpt-image-1 · 尺寸：2048 × 2048</p>
+                </div>
+                <span class="status-pill success">Completed</span>
+              </div>
+              <div class="image-frame">
+                <div class="image-mock coin-scene">
+                  <div class="coin-line one"></div>
+                  <div class="coin-line two"></div>
+                  <div class="coin-line three"></div>
+                  <div class="coin-line four"></div>
+                </div>
+              </div>
+              <div class="page-actions" style="margin-top: 14px;">
+                <span class="helper-text">来源任务：job_7d2f1f · Seed：3921149</span>
+                <span class="badge">Preview Image</span>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

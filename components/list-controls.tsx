@@ -40,7 +40,7 @@ export function ListControls({
 }: ListControlsProps) {
   return (
     <div className="stack" style={{ gap: 12 }}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+      <div className="control-row" style={{ alignItems: "flex-end" }}>
         <div className="field" style={{ flex: "1 1 260px", marginBottom: 0 }}>
           <label>搜索</label>
           <input

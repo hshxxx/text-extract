@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { SettingsSubnav } from "@/components/settings-subnav";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   ModelSettingsBootstrapResponse,
   Provider,
@@ -274,13 +276,22 @@ export function ModelSettingsClient({
   }
 
   return (
-    <div className="stack">
-      <div className="grid-2">
-        <section className="panel">
-          <div className="hero">
-            <h1>文本模型配置</h1>
-            <p>用于固定 Schema 文本提取。保存前会执行真实连接测试，API Key 仅在服务端加密保存。</p>
-          </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="模型模板管理"
+        description="集中维护文本模型、图片模型与模板相关设置。当前页用于管理文本与图片模型连接。"
+        actions={<span className="status-pill">Model Setup</span>}
+      />
+      <SettingsSubnav />
+      <div className="stack">
+        <div className="grid-2">
+          <section className="panel">
+            <div className="section-header">
+              <div>
+                <h2>文本模型配置</h2>
+                <p className="lead">用于固定 Schema 文本提取。保存前会执行真实连接测试，API Key 仅在服务端加密保存。</p>
+              </div>
+            </div>
           {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
           {isBootstrapping ? (
             <div className="stack" style={{ marginBottom: 16 }}>
@@ -369,9 +380,9 @@ export function ModelSettingsClient({
           </div>
           {textMessage ? <p className="helper">{textMessage}</p> : null}
           {textError ? <p className="error-text">{textError}</p> : null}
-        </section>
+          </section>
 
-        <section className="panel">
+          <section className="panel">
           <h2>已有文本模型</h2>
           <ListControls
             searchValue={textQuery}
@@ -455,15 +466,17 @@ export function ModelSettingsClient({
               </article>
             ))}
           </div>
-        </section>
-      </div>
+          </section>
+        </div>
 
-      <div className="grid-2">
-        <section className="panel">
-          <div className="hero">
-            <h2>图片模型配置</h2>
-            <p>用于图片生成模块。字段沿用文本模型配置结构，当前首版开放 OpenAI 兼容图片接口。</p>
-          </div>
+        <div className="grid-2">
+          <section className="panel">
+            <div className="section-header">
+              <div>
+                <h2>图片模型配置</h2>
+                <p className="lead">用于图片生成模块。字段沿用文本模型配置结构，当前首版开放 OpenAI 兼容图片接口。</p>
+              </div>
+            </div>
           <div className="field">
             <label htmlFor="imageModelName">名称</label>
             <input id="imageModelName" value={imageName} onChange={(event) => setImageName(event.target.value)} />
@@ -545,9 +558,9 @@ export function ModelSettingsClient({
           </div>
           {imageMessage ? <p className="helper">{imageMessage}</p> : null}
           {imageError ? <p className="error-text">{imageError}</p> : null}
-        </section>
+          </section>
 
-        <section className="panel">
+          <section className="panel">
           <h2>已有图片模型</h2>
           <ListControls
             searchValue={imageQuery}
@@ -631,7 +644,8 @@ export function ModelSettingsClient({
               </article>
             ))}
           </div>
-        </section>
+          </section>
+        </div>
       </div>
     </div>
   );

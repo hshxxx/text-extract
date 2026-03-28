@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { SettingsSubnav } from "@/components/settings-subnav";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import {
   cloneQuantityTemplateTiers,
   DEFAULT_QUANTITY_TEMPLATE_TIERS,
@@ -138,12 +140,21 @@ export function QuantityTemplatesClient() {
   }
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>数量模板</h1>
-          <p>维护 Matrixify 导出时的 Quantity variants。系统预置模板只读，自定义模板支持设为默认并做单商品微调。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="模型模板管理"
+        description="统一维护导出所需的数量模板。当前页用于配置 Matrixify 导出的 Quantity variants。"
+        actions={<span className="status-pill">Quantity Tiers</span>}
+      />
+      <SettingsSubnav />
+      <div className="grid-2">
+        <section className="panel">
+          <div className="section-header">
+            <div>
+              <h2>数量模板</h2>
+              <p className="lead">系统预置模板只读，自定义模板支持设为默认并做单商品微调。</p>
+            </div>
+          </div>
         <div className="field">
           <label>模板名称</label>
           <input value={name} onChange={(event) => setName(event.target.value)} />
@@ -195,7 +206,7 @@ export function QuantityTemplatesClient() {
             </tbody>
           </table>
         </div>
-        <div className="button-row">
+        <div className="button-row primary-group">
           <button
             type="button"
             className="primary-button"
@@ -216,21 +227,21 @@ export function QuantityTemplatesClient() {
         </div>
         {message ? <p className="helper">{message}</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
-      </section>
+        </section>
 
-      <section className="panel">
+        <section className="panel">
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
             <div className="skeleton-line skeleton-heading" />
             <div className="skeleton-card" />
           </div>
         ) : null}
-        <div className="split-header">
-          <h2>已有数量模板</h2>
-          <Link href="/export-to-sheets" className="ghost-button">
-            返回导出页
-          </Link>
-        </div>
+          <div className="split-header">
+            <h2>已有数量模板</h2>
+            <Link href="/export-to-sheets" className="ghost-button">
+              返回导出页
+            </Link>
+          </div>
         <ListControls
           searchValue={query}
           onSearchChange={(value) => {
@@ -297,7 +308,8 @@ export function QuantityTemplatesClient() {
             </article>
           ))}
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

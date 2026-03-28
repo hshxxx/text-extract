@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { ListControls } from "@/components/list-controls";
+import { WorkspaceIntro } from "@/components/workspace-intro";
 import type {
   ExtractionResultListItem,
   GenerateImageBootstrapResponse,
@@ -171,12 +172,14 @@ export function ImageGenerationClient({
   }
 
   return (
-    <div className="grid-2">
-      <section className="panel">
-        <div className="hero">
-          <h1>图片生成</h1>
-          <p>直接消费文本提取阶段已经生成的 Prompt。若要改 Prompt，请返回文本解析页重新生成。</p>
-        </div>
+    <div className="workspace-shell">
+      <WorkspaceIntro
+        title="图片生成"
+        description="选择已经生成的 Prompt，指定图片模型和尺寸后直接出图。"
+        actions={<span className="status-pill">Prompt Driven</span>}
+      />
+      <div className="grid-2">
+        <section className="panel">
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -274,9 +277,9 @@ export function ImageGenerationClient({
           <h2>图片设置</h2>
           {imageModels.length === 0 && !isBootstrapping ? (
             <div className="empty-state">
-              <p>请先在模型配置页创建图片模型。</p>
-              <Link href="/settings/models" className="primary-button">
-                前往模型配置
+              <p>请先在模型模板管理里创建图片模型。</p>
+              <Link href="/settings" className="primary-button">
+                前往模型模板管理
               </Link>
             </div>
           ) : (
@@ -311,7 +314,7 @@ export function ImageGenerationClient({
                   </select>
                 </div>
               </div>
-              <div className="button-row">
+              <div className="button-row primary-group">
                 <button
                   type="button"
                   className="primary-button"
@@ -354,7 +357,7 @@ export function ImageGenerationClient({
                 ) : null}
                 {result?.imageResultId ? (
                   <Link href={`/edit-image?source=${result.imageResultId}`} className="ghost-button">
-                    Edit Image
+                    前往图片编辑
                   </Link>
                 ) : null}
               </div>
@@ -379,7 +382,8 @@ export function ImageGenerationClient({
             <div className="empty-state">生成后会在这里展示图片预览与下载入口。</div>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

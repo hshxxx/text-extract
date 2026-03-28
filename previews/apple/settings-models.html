@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Settings Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="preview-page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Structured Prompt Workspace</span>
+        <div class="brand-title">AI Prompt Structurer</div>
+        <div class="brand-sub">Preview · 模型配置</div>
+      </div>
+      <nav class="nav-chips">
+        <a class="nav-chip" href="./extract.html">文本解析</a>
+        <a class="nav-chip" href="./generate-image.html">图片生成</a>
+        <a class="nav-chip" href="./edit-image.html">图片编辑</a>
+        <a class="nav-chip" href="./marketing-copy.html">文案生成</a>
+        <a class="nav-chip" href="./export-to-sheets.html">导出 Sheets</a>
+        <a class="nav-chip active" href="./settings-models.html">模型模板管理</a>
+        <a class="nav-chip" href="./history.html">历史记录</a>
+      </nav>
+      <a class="topbar-action" href="./index.html">预览入口</a>
+    </header>
+
+    <section class="workspace-intro">
+      <div>
+        <h1>模型配置</h1>
+        <p>配置文本模型和图片模型，测试连接后保存为当前工作流的默认能力。</p>
+      </div>
+      <div class="workspace-intro-actions">
+        <span class="soft-pill">OpenAI Compatible</span>
+      </div>
+    </section>
+
+    <div class="subnav-wrap">
+      <nav class="subnav-chips">
+        <a class="subnav-chip active" href="./settings-models.html">模型配置</a>
+        <a class="subnav-chip" href="./settings-templates.html">模板管理</a>
+        <a class="subnav-chip" href="./settings-quantity-templates.html">数量模板</a>
+      </nav>
+    </div>
+
+    <section class="workspace-shell tight">
+      <div class="workspace-grid">
+        <article class="pane">
+          <div class="pane-inner">
+            <div class="section-header">
+              <div>
+                <h2>文本模型配置</h2>
+                <p>用于固定 Schema 文本提取，保存前执行真实连接测试。</p>
+              </div>
+              <span class="soft-pill">OpenAI Compatible</span>
+            </div>
+            <div class="field">
+              <label>名称</label>
+              <input class="text-input" value="联调文本模型" />
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label>Provider</label>
+                <select class="select"><option>OpenAI Compatible</option></select>
+              </div>
+              <div class="field">
+                <label>Model</label>
+                <input class="text-input" value="gpt-5.4" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Base URL</label>
+              <input class="text-input" value="https://your-proxy.example.com/v1" />
+            </div>
+            <div class="field">
+              <label>API Key</label>
+              <input class="text-input" type="password" value="sk-live-hidden" />
+            </div>
+            <label class="toggle-row helper-text" style="margin-bottom: 16px;"><input type="checkbox" checked /> 设为默认文本模型</label>
+            <div class="button-row primary-group stacked-mobile">
+              <button class="secondary-button">测试连接</button>
+              <button class="primary-button">保存配置</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-header">
+              <div>
+                <h3>图片模型配置</h3>
+                <p class="muted">与文本模型保持一致的表单语义</p>
+              </div>
+              <span class="soft-pill">Image</span>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label>名称</label>
+                <input class="text-input" value="高清图像模型" />
+              </div>
+              <div class="field">
+                <label>Model</label>
+                <input class="text-input" value="gpt-image-1" />
+              </div>
+            </div>
+            <div class="button-row primary-group stacked-mobile">
+              <button class="secondary-button">测试图片连接</button>
+              <button class="primary-button">保存图片模型</button>
+            </div>
+          </div>
+        </article>
+
+        <section class="stack">
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>已有文本模型</h3>
+                  <p class="muted">列表区与表单区保持视觉平衡</p>
+                </div>
+                <span class="badge">2 items</span>
+              </div>
+              <div class="list-stack">
+                <div class="setting-card active">
+                  <div class="split">
+                    <div>
+                      <strong>联调文本模型</strong>
+                      <p class="muted">gpt-5.4 · 默认</p>
+                    </div>
+                    <div class="button-row stacked-mobile">
+                      <button class="ghost-button">编辑</button>
+                      <button class="ghost-button">设为默认</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-card">
+                  <div class="split">
+                    <div>
+                      <strong>备用文本模型</strong>
+                      <p class="muted">gpt-4.1 · 非默认</p>
+                    </div>
+                    <button class="ghost-button">编辑</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-panel">
+            <div class="panel-inner">
+              <div class="section-header">
+                <div>
+                  <h3>已有图片模型</h3>
+                  <p class="muted">图片模型列表沿用同一设计系统</p>
+                </div>
+                <span class="badge">1 item</span>
+              </div>
+              <div class="list-stack">
+                <div class="setting-card active">
+                  <div class="split">
+                    <div>
+                      <strong>高清图像模型</strong>
+                      <p class="muted">gpt-image-1 · 默认</p>
+                    </div>
+                    <button class="ghost-button">编辑</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
