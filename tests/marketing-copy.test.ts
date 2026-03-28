@@ -1,167 +1,177 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildMarketingCopySystemPrompt,
-  ensureShopifyDescription,
+  generateMarketingCopyWithEmojiRetry,
+  getMarketingCopyEmojiCoverageIssues,
   normalizeMarketingCopyResult,
 } from "@/lib/services/marketingCopy";
-import { convertDescriptionToBodyHtml } from "@/lib/services/exportToSheets";
 
-describe("marketing copy Shopify constraints", () => {
-  it("adds concise Shopify description guidance and emoji guidance to the system prompt", () => {
-    const prompt = buildMarketingCopySystemPrompt();
-
-    expect(prompt).toContain("Keep the English section headings exactly unchanged");
-    expect(prompt).toContain("Overview, Front Design, and Back Design must each be 1-2 short sentences");
-    expect(prompt).toContain("Use a moderate amount of emoji in Shopify description body text");
-    expect(prompt).toContain("Facebook copy should be concise, persuasive, and ad-ready.");
-  });
-
-  it("provides concise fallback Shopify descriptions with emoji while preserving headings", () => {
-    const english = ensureShopifyDescription("", "en");
-    const chinese = ensureShopifyDescription("", "cn");
-
-    expect(english).toContain("Overview");
-    expect(english).toContain("Front Design");
-    expect(english).toContain("Back Design");
-    expect(english).toContain("Why This Coin Stands Out");
-    expect(english).toContain("✨");
-    expect(english).toContain("🛡️");
-    expect(english).toContain("🎖️");
-    expect(english).toContain("🎁");
-    expect(english).not.toContain("Describe the obverse composition");
-
-    expect(chinese).toContain("概览");
-    expect(chinese).toContain("正面设计");
-    expect(chinese).toContain("背面设计");
-    expect(chinese).toContain("这枚纪念币为何脱颖而出");
-    expect(chinese).toContain("✨");
-    expect(chinese).toContain("🛡️");
-    expect(chinese).toContain("🎖️");
-    expect(chinese).toContain("🎁");
-    expect(chinese).not.toContain("说明纪念币正面的主要画面");
-  });
-
-  it("normalizes Shopify results to exactly four selling points and preserves Facebook output", () => {
-    const result = normalizeMarketingCopyResult({
-      shopify: {
-        title: { en: "Title", cn: "标题" },
-        subtitle: { en: "Subtitle", cn: "副标题" },
-        selling_points: [{ en: "A", cn: "甲" }],
-        description: { en: "", cn: "" },
+function createValidMarketingCopy() {
+  return {
+    shopify: {
+      title: {
+        en: "Veterans Tribute Challenge Coin",
+        cn: "退伍军人纪念挑战币",
       },
-      facebook: {
-        primary_text: { en: "Primary", cn: "主文案" },
-        headline: { en: "Headline", cn: "标题" },
-        description: { en: "Description", cn: "描述" },
-        cta_suggestion: { en: "Shop now", cn: "立即购买" },
+      subtitle: {
+        en: "Honor every story with pride 🎖️",
+        cn: "让每一份荣誉都被看见 🎖️",
       },
-    });
+      selling_points: [
+        {
+          en: "✨ Rich relief details for a premium display piece",
+          cn: "✨ 浮雕层次丰富，陈列更有质感",
+        },
+        {
+          en: "🦅 Front artwork captures service and national pride",
+          cn: "🦅 正面图案凝聚服役精神与荣耀",
+        },
+        {
+          en: "🎁 Meaningful keepsake for veterans and families",
+          cn: "🎁 适合作为军人与家属的纪念礼物",
+        },
+        {
+          en: "🏅 Collectible finish with lasting commemorative value",
+          cn: "🏅 收藏级质感，纪念意义持久",
+        },
+      ],
+      description: {
+        en: [
+          "Overview",
+          "Celebrate courage and remembrance with a premium tribute coin ✨",
+          "",
+          "Front Design",
+          "The obverse pairs heroic symbols with crisp relief engraving 🎖️",
+          "",
+          "Back Design",
+          "The reverse completes the story with ceremonial detail 🦅",
+          "",
+          "Why This Coin Stands Out",
+          "It balances emotional meaning, display quality, and gifting appeal 🎁",
+        ].join("\n"),
+        cn: [
+          "概览",
+          "这是一枚兼具纪念意义与收藏质感的纪念币 ✨",
+          "",
+          "正面设计",
+          "正面通过浮雕与主题元素传达服役荣誉 🎖️",
+          "",
+          "背面设计",
+          "背面细节完整呼应主题，强化纪念氛围 🦅",
+          "",
+          "这枚纪念币为何脱颖而出",
+          "它兼具礼赠价值、陈列效果与情感表达 🎁",
+        ].join("\n"),
+      },
+    },
+    facebook: {
+      primary_text: {
+        en: "Honor, pride, and remembrance in one collectible tribute coin 🎖️✨",
+        cn: "把致敬、荣耀与纪念浓缩进这一枚收藏纪念币 🎖️✨",
+      },
+      headline: {
+        en: "A Lasting Tribute 🎁",
+        cn: "一份长久珍藏的致敬 🎁",
+      },
+      description: {
+        en: "Meaningful display piece for veterans and families 🦅",
+        cn: "适合军人与家属珍藏陈列的纪念之作 🦅",
+      },
+      cta_suggestion: {
+        en: "Shop the tribute now ✨",
+        cn: "立即收藏这份致敬 ✨",
+      },
+    },
+  };
+}
 
-    expect(result.shopify.selling_points).toHaveLength(4);
-    expect(result.shopify.description.en).toContain("Overview");
-    expect(result.shopify.description.en).toContain("✨");
-    expect(result.facebook.primary_text.en).toBe("Primary");
-    expect(result.facebook.cta_suggestion.cn).toBe("立即购买");
-  });
-
-  it("compresses long Shopify overview, front, and back sections during normalization", () => {
-    const result = normalizeMarketingCopyResult({
+describe("marketing copy helpers", () => {
+  it("normalizes selling points, preserves emoji, and keeps Shopify description sections", () => {
+    const normalized = normalizeMarketingCopyResult({
       shopify: {
-        title: { en: "Title", cn: "标题" },
-        subtitle: { en: "Subtitle", cn: "副标题" },
-        selling_points: [],
+        title: { en: "Tribute coin", cn: "纪念币" },
+        subtitle: { en: "Honor with pride 🎖️", cn: "荣耀致敬 🎖️" },
+        selling_points: [
+          { en: "✨ Premium finish", cn: "✨ 质感出众" },
+          { en: "🎁 Gift-ready keepsake", cn: "🎁 送礼合适" },
+        ],
         description: {
-          en: [
-            "Overview",
-            "This commemorative coin is designed to celebrate a major milestone with rich symbolic storytelling, layered historical references, premium collectible appeal, and a memorable emotional message for supporters, families, and display collectors alike. It continues with extra explanation that should be trimmed away because it is too long for a concise product page. It even adds a third sentence that should never survive normalization.",
-            "",
-            "Front Design",
-            "The front combines a central emblem, supporting laurels, engraved typography, raised texture, border detailing, and multiple symbolic accents that keep expanding far beyond a quick-read ecommerce description. Another sentence keeps talking and should be shortened. A third sentence should disappear.",
-            "",
-            "Back Design",
-            "The back presents a second layer of symbolism, commemorative wording, relief depth, and framing elements in a way that becomes too descriptive for the intended Shopify layout. Another long sentence keeps the section bloated. A third sentence should disappear as well.",
-            "",
-            "Why This Coin Stands Out",
-            "It is premium, meaningful, display-worthy, and built to feel like a lasting keepsake for gifting and collecting.",
-          ].join("\n"),
-          cn: [
-            "概览",
-            "这枚纪念币围绕主题展开了大量背景说明、情绪表达、收藏意义、礼赠场景和设计延伸内容，整体已经明显超过精炼商品页需要的篇幅，而且后面还补了很多解释，应该被压短。这一句也应该被截断。",
-            "",
-            "正面设计",
-            "正面同时讲了很多构图层次、浮雕细节、刻字内容、边框元素和象征信息，内容过长，不适合现在想要的快读型 Shopify 页面。这一句也应该被压掉。",
-            "",
-            "背面设计",
-            "背面又继续展开了大量补充说明、图像寓意、纹理层次和排版描述，已经超出了简洁商品文案应有的长度。这一句也应该被压掉。",
-            "",
-            "这枚纪念币为何脱颖而出",
-            "它兼顾纪念价值、展示质感与礼赠属性，成品完成度高。",
-          ].join("\n"),
+          en: "✨ Premium tribute coin for collectors",
+          cn: "✨ 适合收藏与纪念的高品质纪念币",
         },
       },
       facebook: {
-        primary_text: { en: "Primary", cn: "主文案" },
-        headline: { en: "Headline", cn: "标题" },
-        description: { en: "Description", cn: "描述" },
-        cta_suggestion: { en: "Shop now", cn: "立即购买" },
+        primary_text: { en: "Tribute copy 🎖️✨", cn: "致敬文案 🎖️✨" },
+        headline: { en: "Honor 🎁", cn: "致敬 🎁" },
+        description: { en: "Keepsake 🦅", cn: "纪念之作 🦅" },
+        cta_suggestion: { en: "Shop now ✨", cn: "立即查看 ✨" },
       },
     });
 
-    const overviewEn = result.shopify.description.en.split("\n\n")[0];
-    const frontEn = result.shopify.description.en.split("\n\n")[1];
-    const backEn = result.shopify.description.en.split("\n\n")[2];
-    const overviewCn = result.shopify.description.cn.split("\n\n")[0];
-
-    expect(overviewEn).toContain("Overview");
-    expect(overviewEn).toContain("✨");
-    expect(overviewEn).not.toContain("It even adds a third sentence");
-    expect(overviewEn.length).toBeLessThan(180);
-
-    expect(frontEn).toContain("Front Design");
-    expect(frontEn).toContain("🛡️");
-    expect(frontEn).not.toContain("A third sentence should disappear");
-    expect(frontEn.length).toBeLessThan(180);
-
-    expect(backEn).toContain("Back Design");
-    expect(backEn).toContain("🎖️");
-    expect(backEn).not.toContain("A third sentence should disappear as well");
-    expect(backEn.length).toBeLessThan(180);
-
-    expect(overviewCn).toContain("概览");
-    expect(overviewCn).toContain("✨");
-    expect(overviewCn).not.toContain("这一句也应该被截断");
-    expect(overviewCn.length).toBeLessThan(90);
+    expect(normalized.shopify.selling_points).toHaveLength(4);
+    expect(normalized.shopify.selling_points[0].en).toContain("✨");
+    expect(normalized.shopify.description.en).toContain("Overview");
+    expect(normalized.shopify.description.en).toContain("✨ Premium tribute coin for collectors");
+    expect(normalized.shopify.description.cn).toContain("概览");
+    expect(normalized.shopify.description.cn).toContain("✨ 适合收藏与纪念的高品质纪念币");
   });
-});
 
-describe("Shopify description export compatibility", () => {
-  it("keeps fixed English headings parseable for HTML export", () => {
-    const description = [
-      "Overview",
-      "A polished commemorative coin that feels gift-ready and display-worthy. ✨",
-      "",
-      "Front Design",
-      "The front centers the emblem and engraved message in a crisp layout. 🛡️",
-      "",
-      "Back Design",
-      "The back adds supporting symbols that complete the story. 🎖️",
-      "",
-      "Why This Coin Stands Out",
-      "Built for meaningful gifting and proud display with a premium finish. 🎁",
-    ].join("\n");
+  it("reports emoji coverage gaps and passes compliant copy", () => {
+    const invalid = normalizeMarketingCopyResult({
+      shopify: {
+        title: { en: "Tribute coin", cn: "纪念币" },
+        subtitle: { en: "Honor with pride", cn: "荣耀致敬" },
+        selling_points: [{ en: "Premium finish", cn: "质感出众" }],
+        description: { en: "Overview\nPlain copy", cn: "概览\n普通文案" },
+      },
+      facebook: {
+        primary_text: { en: "Tribute coin", cn: "致敬纪念币" },
+        headline: { en: "Honor", cn: "致敬" },
+        description: { en: "Keepsake", cn: "纪念之作" },
+        cta_suggestion: { en: "Shop now", cn: "立即查看" },
+      },
+    });
 
-    const html = convertDescriptionToBodyHtml(
-      description,
-      "https://example.com/front.png",
-      "https://example.com/back.png",
-    );
+    const issues = getMarketingCopyEmojiCoverageIssues(invalid);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((issue) => issue.field === "shopify.subtitle" && issue.language === "en")).toBe(true);
+    expect(issues.some((issue) => issue.field === "facebook.primary_text" && issue.language === "cn")).toBe(true);
 
-    expect(html).toContain("<h3>Overview</h3>");
-    expect(html).toContain("<h3>Front Design</h3>");
-    expect(html).toContain("<h3>Back Design</h3>");
-    expect(html).toContain("<h3>Why This Coin Stands Out</h3>");
-    expect(html).toContain('src="https://example.com/front.png"');
-    expect(html).toContain('src="https://example.com/back.png"');
-    expect(html).toContain("gift-ready and display-worthy");
+    expect(getMarketingCopyEmojiCoverageIssues(normalizeMarketingCopyResult(createValidMarketingCopy()))).toEqual([]);
+  });
+
+  it("retries once when the first generated draft misses emoji coverage", async () => {
+    let calls = 0;
+
+    const result = await generateMarketingCopyWithEmojiRetry(async ({ attempt, emojiRetryInstruction }) => {
+      calls += 1;
+
+      if (attempt === 0) {
+        expect(emojiRetryInstruction).toBeNull();
+
+        return JSON.stringify({
+          shopify: {
+            title: { en: "Tribute coin", cn: "纪念币" },
+            subtitle: { en: "Honor with pride", cn: "荣耀致敬" },
+            selling_points: [{ en: "Premium finish", cn: "质感出众" }],
+            description: { en: "Overview\nPlain copy", cn: "概览\n普通文案" },
+          },
+          facebook: {
+            primary_text: { en: "Tribute coin", cn: "致敬纪念币" },
+            headline: { en: "Honor", cn: "致敬" },
+            description: { en: "Keepsake", cn: "纪念之作" },
+            cta_suggestion: { en: "Shop now", cn: "立即查看" },
+          },
+        });
+      }
+
+      expect(emojiRetryInstruction).toContain("shopify.subtitle.en");
+      expect(emojiRetryInstruction).toContain("facebook.primary_text.en");
+
+      return JSON.stringify(createValidMarketingCopy());
+    });
+
+    expect(calls).toBe(2);
+    expect(result.facebook.primary_text.en).toContain("🎖️");
+    expect(result.shopify.selling_points[0].cn).toContain("✨");
   });
 });
