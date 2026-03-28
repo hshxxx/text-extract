@@ -178,8 +178,8 @@ export function ImageGenerationClient({
         description="选择已经生成的 Prompt，指定图片模型和尺寸后直接出图。"
         actions={<span className="status-pill">Prompt Driven</span>}
       />
-      <div className="grid-2">
-        <section className="panel">
+      <div className="workspace-grid-3">
+        <section className="panel workspace-column">
         {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
         {isBootstrapping ? (
           <div className="stack" style={{ marginBottom: 16 }}>
@@ -263,7 +263,7 @@ export function ImageGenerationClient({
         </div>
       </section>
 
-      <section className="stack">
+      <section className="stack workspace-column">
         <div className="panel">
           <h2>Prompt 预览</h2>
           {selectedPrompt ? (
@@ -365,8 +365,9 @@ export function ImageGenerationClient({
           )}
           {error ? <p className="error-text">{error}</p> : null}
         </div>
+      </section>
 
-        <div className="panel">
+        <section className="panel workspace-column">
           <h2>生成结果</h2>
           {result?.imageUrl ? (
             <div className="stack">
@@ -381,7 +382,6 @@ export function ImageGenerationClient({
           ) : (
             <div className="empty-state">生成后会在这里展示图片预览与下载入口。</div>
           )}
-        </div>
         </section>
       </div>
     </div>

@@ -339,8 +339,8 @@ export function HistoryClient({
         description="按文本、图片、编辑、文案和导出分组查看历史任务，左侧检索，右侧展开详情。"
         actions={<span className="status-pill">Traceable</span>}
       />
-      <div className="grid-2">
-        <section className="panel">
+      <div className="workspace-grid-3">
+        <section className="panel workspace-column">
         <div className="tab-row" style={{ marginBottom: 16 }}>
           <button type="button" className={activeTab === "text" ? "nav-link-active" : "nav-link"} onClick={() => handleTabChange("text")}>
             文本提取
@@ -709,309 +709,341 @@ export function HistoryClient({
         )}
         </section>
 
-        <section className="stack">
-        {activeTab === "text" ? (
-          <>
-            <div className="panel">
-              <h2>文本任务详情</h2>
-              {selectedText ? (
-                <>
-                  <p className="subtle">
-                    状态：{selectedText.status} · {new Date(selectedText.created_at).toLocaleString("zh-CN")}
-                  </p>
-                  {selectedText.error_message ? <p className="error-text">{selectedText.error_message}</p> : null}
-                </>
-              ) : (
-                <div className="empty-state">从左侧选择一条文本任务查看详情。</div>
-              )}
-              {error ? <p className="error-text">{error}</p> : null}
-            </div>
-            <div className="panel">
-              <h3>模板快照</h3>
-              {selectedText?.template_snapshot ? <div className="mono-block">{selectedText.template_snapshot}</div> : <div className="empty-state">暂无模板快照。</div>}
-            </div>
-            <div className="panel">
-              <h3>结构化数据</h3>
-              {selectedText?.structured_data ? <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div> : <div className="empty-state">这条任务没有结构化数据。</div>}
-            </div>
-            <div className="panel">
-              <h3>最终 Prompt</h3>
-              {selectedText?.final_prompt ? <div className="mono-block">{selectedText.final_prompt}</div> : <div className="empty-state">这条任务没有生成最终 Prompt。</div>}
-            </div>
-            <div className="panel">
-              <h3>原始模型输出</h3>
-              {selectedText?.raw_model_output ? <div className="mono-block">{selectedText.raw_model_output}</div> : <div className="empty-state">这条任务没有记录原始模型输出。</div>}
-            </div>
-          </>
-        ) : activeTab === "image" ? (
-          <>
-            <div className="panel">
-              <h2>图片任务详情</h2>
-              {selectedImage ? (
-                <>
-                  <p className="subtle">
-                    状态：{selectedImage.task.status} · {new Date(selectedImage.task.created_at).toLocaleString("zh-CN")}
-                  </p>
-                  <p className="subtle">
-                    来源提取任务：{selectedImage.task.extraction_job_id} · 模型：{selectedImage.modelName} · 尺寸：{selectedImage.task.image_size}
-                  </p>
-                  {selectedImage.task.error_message ? <p className="error-text">{selectedImage.task.error_message}</p> : null}
-                </>
-              ) : (
-                <div className="empty-state">从左侧选择一条图片任务查看详情。</div>
-              )}
-              {error ? <p className="error-text">{error}</p> : null}
-            </div>
-            <div className="panel">
-              <h3>来源 Prompt</h3>
-              {selectedImage?.sourcePrompt ? <div className="mono-block">{selectedImage.sourcePrompt}</div> : <div className="empty-state">暂无来源 Prompt。</div>}
-            </div>
-            <div className="panel">
-              <h3>生成图片</h3>
-              {selectedImage?.result?.image_url ? (
-                <div className="stack">
+        <div className="workspace-detail-grid workspace-column workspace-span-2">
+          {activeTab === "text" ? (
+            <>
+              <div className="panel">
+                <h2>文本任务详情</h2>
+                {selectedText ? (
+                  <>
+                    <p className="subtle">
+                      状态：{selectedText.status} · {new Date(selectedText.created_at).toLocaleString("zh-CN")}
+                    </p>
+                    {selectedText.error_message ? <p className="error-text">{selectedText.error_message}</p> : null}
+                  </>
+                ) : (
+                  <div className="empty-state">从左侧选择一条文本任务查看详情。</div>
+                )}
+                {error ? <p className="error-text">{error}</p> : null}
+              </div>
+              <div className="panel">
+                <h3>模板快照</h3>
+                {selectedText?.template_snapshot ? (
+                  <div className="mono-block">{selectedText.template_snapshot}</div>
+                ) : (
+                  <div className="empty-state">暂无模板快照。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>结构化数据</h3>
+                {selectedText?.structured_data ? (
+                  <div className="mono-block">{JSON.stringify(selectedText.structured_data, null, 2)}</div>
+                ) : (
+                  <div className="empty-state">这条任务没有结构化数据。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>最终 Prompt</h3>
+                {selectedText?.final_prompt ? (
+                  <div className="mono-block">{selectedText.final_prompt}</div>
+                ) : (
+                  <div className="empty-state">这条任务没有生成最终 Prompt。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>原始模型输出</h3>
+                {selectedText?.raw_model_output ? (
+                  <div className="mono-block">{selectedText.raw_model_output}</div>
+                ) : (
+                  <div className="empty-state">这条任务没有记录原始模型输出。</div>
+                )}
+              </div>
+            </>
+          ) : activeTab === "image" ? (
+            <>
+              <div className="panel">
+                <h2>图片任务详情</h2>
+                {selectedImage ? (
+                  <>
+                    <p className="subtle">
+                      状态：{selectedImage.task.status} · {new Date(selectedImage.task.created_at).toLocaleString("zh-CN")}
+                    </p>
+                    <p className="subtle">
+                      来源提取任务：{selectedImage.task.extraction_job_id} · 模型：{selectedImage.modelName} · 尺寸：{selectedImage.task.image_size}
+                    </p>
+                    {selectedImage.task.error_message ? <p className="error-text">{selectedImage.task.error_message}</p> : null}
+                  </>
+                ) : (
+                  <div className="empty-state">从左侧选择一条图片任务查看详情。</div>
+                )}
+                {error ? <p className="error-text">{error}</p> : null}
+              </div>
+              <div className="panel">
+                <h3>来源 Prompt</h3>
+                {selectedImage?.sourcePrompt ? (
+                  <div className="mono-block">{selectedImage.sourcePrompt}</div>
+                ) : (
+                  <div className="empty-state">暂无来源 Prompt。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>生成图片</h3>
+                {selectedImage?.result?.image_url ? (
+                  <div className="stack">
+                    <div className="image-frame">
+                      <img src={selectedImage.result.image_url} alt="generated history result" className="generated-image" />
+                    </div>
+                    <div className="button-row">
+                      <a href={selectedImage.result.image_url} className="ghost-button" target="_blank" rel="noreferrer">
+                        打开原图
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-state">这条任务没有可用图片结果。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>结果元数据</h3>
+                {selectedImage?.result ? (
+                  <div className="mono-block">
+                    {JSON.stringify(
+                      {
+                        task_id: selectedImage.result.task_id,
+                        image_url: selectedImage.result.image_url,
+                        storage_path: selectedImage.result.storage_path,
+                        provider_image_url: selectedImage.result.provider_image_url,
+                        model: selectedImage.result.model,
+                        seed: selectedImage.result.seed,
+                      },
+                      null,
+                      2,
+                    )}
+                  </div>
+                ) : (
+                  <div className="empty-state">暂无结果元数据。</div>
+                )}
+              </div>
+            </>
+          ) : activeTab === "edit" ? (
+            <>
+              <div className="panel">
+                <h2>图片编辑任务详情</h2>
+                {selectedEdit ? (
+                  <>
+                    <p className="subtle">
+                      状态：{selectedEdit.task.status} · {new Date(selectedEdit.task.created_at).toLocaleString("zh-CN")}
+                    </p>
+                    <p className="subtle">来源图片：{selectedEdit.sourceImageId}</p>
+                  </>
+                ) : (
+                  <div className="empty-state">从左侧选择一条图片编辑任务查看详情。</div>
+                )}
+                {error ? <p className="error-text">{error}</p> : null}
+              </div>
+              <div className="panel">
+                <h3>状态摘要</h3>
+                {selectedEdit ? (
+                  <div className="mono-block">
+                    {JSON.stringify(
+                      {
+                        task_id: selectedEdit.task.id,
+                        source_image_id: selectedEdit.sourceImageId,
+                        status: selectedEdit.task.status,
+                        front_status: selectedEdit.frontJob?.status ?? null,
+                        back_status: selectedEdit.backJob?.status ?? null,
+                        front_image: selectedEdit.frontJob?.image_url ?? null,
+                        back_image: selectedEdit.backJob?.image_url ?? null,
+                      },
+                      null,
+                      2,
+                    )}
+                  </div>
+                ) : (
+                  <div className="empty-state">暂无图片编辑详情。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>Front Final</h3>
+                {selectedEdit?.frontJob?.image_url ? (
                   <div className="image-frame">
-                    <img src={selectedImage.result.image_url} alt="generated history result" className="generated-image" />
+                    <img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" />
                   </div>
-                  <div className="button-row">
-                    <a href={selectedImage.result.image_url} className="ghost-button" target="_blank" rel="noreferrer">
-                      打开原图
-                    </a>
+                ) : (
+                  <div className="empty-state">暂无 Front Final。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>Back Final</h3>
+                {selectedEdit?.backJob?.image_url ? (
+                  <div className="image-frame">
+                    <img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" />
                   </div>
-                </div>
-              ) : (
-                <div className="empty-state">这条任务没有可用图片结果。</div>
-              )}
-            </div>
-            <div className="panel">
-              <h3>结果元数据</h3>
-              {selectedImage?.result ? (
-                <div className="mono-block">
-                  {JSON.stringify(
-                    {
-                      task_id: selectedImage.result.task_id,
-                      image_url: selectedImage.result.image_url,
-                      storage_path: selectedImage.result.storage_path,
-                      provider_image_url: selectedImage.result.provider_image_url,
-                      model: selectedImage.result.model,
-                      seed: selectedImage.result.seed,
-                    },
-                    null,
-                    2,
-                  )}
-                </div>
-              ) : (
-                <div className="empty-state">暂无结果元数据。</div>
-              )}
-            </div>
-          </>
-        ) : activeTab === "edit" ? (
-          <>
-            <div className="panel">
-              <h2>图片编辑任务详情</h2>
-              {selectedEdit ? (
-                <>
-                  <p className="subtle">
-                    状态：{selectedEdit.task.status} · {new Date(selectedEdit.task.created_at).toLocaleString("zh-CN")}
-                  </p>
-                  <p className="subtle">来源图片：{selectedEdit.sourceImageId}</p>
-                </>
-              ) : (
-                <div className="empty-state">从左侧选择一条图片编辑任务查看详情。</div>
-              )}
-              {error ? <p className="error-text">{error}</p> : null}
-            </div>
-            <div className="panel">
-              <h3>Front Final</h3>
-              {selectedEdit?.frontJob?.image_url ? <div className="image-frame"><img src={selectedEdit.frontJob.image_url} alt="front final history" className="generated-image" /></div> : <div className="empty-state">暂无 Front Final。</div>}
-            </div>
-            <div className="panel">
-              <h3>Back Final</h3>
-              {selectedEdit?.backJob?.image_url ? <div className="image-frame"><img src={selectedEdit.backJob.image_url} alt="back final history" className="generated-image" /></div> : <div className="empty-state">暂无 Back Final。</div>}
-            </div>
-            <div className="panel">
-              <h3>状态摘要</h3>
-              {selectedEdit ? (
-                <div className="mono-block">
-                  {JSON.stringify(
-                    {
-                      task_id: selectedEdit.task.id,
-                      source_image_id: selectedEdit.sourceImageId,
-                      status: selectedEdit.task.status,
-                      front_status: selectedEdit.frontJob?.status ?? null,
-                      back_status: selectedEdit.backJob?.status ?? null,
-                      front_image: selectedEdit.frontJob?.image_url ?? null,
-                      back_image: selectedEdit.backJob?.image_url ?? null,
-                    },
-                    null,
-                    2,
-                  )}
-                </div>
-              ) : (
-                <div className="empty-state">暂无图片编辑详情。</div>
-              )}
-            </div>
-          </>
-        ) : activeTab === "marketing" ? (
-          <>
-            <div className="panel">
-              <h2>营销文案详情</h2>
-              {selectedMarketing ? (
-                <>
-                  <p className="subtle">
-                    模板：{selectedMarketing.template?.name ?? "未知模板"} · {new Date(selectedMarketing.version.created_at).toLocaleString("zh-CN")}
-                  </p>
-                  <p className="subtle">Confirmed：{selectedMarketing.version.is_confirmed ? "是" : "否"}</p>
-                </>
-              ) : (
-                <div className="empty-state">从左侧选择一条文案版本查看详情。</div>
-              )}
-              {error ? <p className="error-text">{error}</p> : null}
-            </div>
-            <div className="panel">
-              <h3>素材图片</h3>
-              {selectedMarketing ? (
-                <div className="grid-2">
-                  <div className="history-image-thumb">
-                    {selectedMarketing.frontImageUrl ? <img src={selectedMarketing.frontImageUrl} alt="marketing detail front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                ) : (
+                  <div className="empty-state">暂无 Back Final。</div>
+                )}
+              </div>
+            </>
+          ) : activeTab === "marketing" ? (
+            <>
+              <div className="panel">
+                <h2>营销文案详情</h2>
+                {selectedMarketing ? (
+                  <>
+                    <p className="subtle">
+                      模板：{selectedMarketing.template?.name ?? "未知模板"} · {new Date(selectedMarketing.version.created_at).toLocaleString("zh-CN")}
+                    </p>
+                    <p className="subtle">Confirmed：{selectedMarketing.version.is_confirmed ? "是" : "否"}</p>
+                  </>
+                ) : (
+                  <div className="empty-state">从左侧选择一条文案版本查看详情。</div>
+                )}
+                {error ? <p className="error-text">{error}</p> : null}
+              </div>
+              <div className="panel">
+                <h3>素材图片</h3>
+                {selectedMarketing ? (
+                  <div className="grid-2">
+                    <div className="history-image-thumb">
+                      {selectedMarketing.frontImageUrl ? <img src={selectedMarketing.frontImageUrl} alt="marketing detail front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                    </div>
+                    <div className="history-image-thumb">
+                      {selectedMarketing.backImageUrl ? <img src={selectedMarketing.backImageUrl} alt="marketing detail back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
+                    </div>
                   </div>
-                  <div className="history-image-thumb">
-                    {selectedMarketing.backImageUrl ? <img src={selectedMarketing.backImageUrl} alt="marketing detail back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
-                  </div>
-                </div>
-              ) : (
-                <div className="empty-state">暂无营销文案素材预览。</div>
-              )}
-            </div>
-            <div className="panel">
-              <h3>Shopify 标题</h3>
-              {activeMarketingResult ? (
-                <div className="mono-block">
-                  {JSON.stringify(
-                    {
-                      shopify_title_en: activeMarketingResult.shopify.title.en,
-                      shopify_title_cn: activeMarketingResult.shopify.title.cn,
-                      shopify_subtitle_en: activeMarketingResult.shopify.subtitle.en,
-                      shopify_subtitle_cn: activeMarketingResult.shopify.subtitle.cn,
-                      facebook_headline_en: activeMarketingResult.facebook.headline.en,
-                      facebook_headline_cn: activeMarketingResult.facebook.headline.cn,
-                    },
-                    null,
-                    2,
-                  )}
-                </div>
-              ) : (
-                <div className="empty-state">暂无营销文案标题摘要。</div>
-              )}
-            </div>
-            <div className="panel">
-              <h3>Shopify Description EN / CN</h3>
-              {activeMarketingResult ? (
-                <div className="grid-2">
-                  <pre className="code-block">{activeMarketingResult.shopify.description.en}</pre>
-                  <pre className="code-block">{activeMarketingResult.shopify.description.cn}</pre>
-                </div>
-              ) : (
-                <div className="empty-state">暂无 Shopify 描述内容。</div>
-              )}
-            </div>
-            <div className="panel">
-              <h3>Facebook Copy EN / CN</h3>
-              {activeMarketingResult ? (
-                <div className="grid-2">
-                  <pre className="code-block">
+                ) : (
+                  <div className="empty-state">暂无营销文案素材预览。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>Shopify 标题</h3>
+                {activeMarketingResult ? (
+                  <div className="mono-block">
                     {JSON.stringify(
                       {
-                        primary_text: activeMarketingResult.facebook.primary_text.en,
-                        headline: activeMarketingResult.facebook.headline.en,
-                        description: activeMarketingResult.facebook.description.en,
-                        cta_suggestion: activeMarketingResult.facebook.cta_suggestion.en,
+                        shopify_title_en: activeMarketingResult.shopify.title.en,
+                        shopify_title_cn: activeMarketingResult.shopify.title.cn,
+                        shopify_subtitle_en: activeMarketingResult.shopify.subtitle.en,
+                        shopify_subtitle_cn: activeMarketingResult.shopify.subtitle.cn,
+                        facebook_headline_en: activeMarketingResult.facebook.headline.en,
+                        facebook_headline_cn: activeMarketingResult.facebook.headline.cn,
                       },
                       null,
                       2,
                     )}
-                  </pre>
-                  <pre className="code-block">
-                    {JSON.stringify(
-                      {
-                        primary_text: activeMarketingResult.facebook.primary_text.cn,
-                        headline: activeMarketingResult.facebook.headline.cn,
-                        description: activeMarketingResult.facebook.description.cn,
-                        cta_suggestion: activeMarketingResult.facebook.cta_suggestion.cn,
-                      },
-                      null,
-                      2,
-                    )}
-                  </pre>
-                </div>
-              ) : (
-                <div className="empty-state">暂无 Facebook 文案内容。</div>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="panel">
-              <h2>导出批次详情</h2>
-              {selectedExport ? (
-                <>
-                  <p className="subtle">
-                    批次：{selectedExport.batch.batch_name} · {new Date(selectedExport.batch.created_at).toLocaleString("zh-CN")}
-                  </p>
-                  <p className="subtle">商品数：{selectedExport.batch.product_count}</p>
-                  <div className="button-row" style={{ marginTop: 12 }}>
-                    <a href={selectedExport.batch.sheet_url} target="_blank" rel="noreferrer" className="ghost-button">
-                      打开 Google Sheet
-                    </a>
                   </div>
-                </>
-              ) : (
-                <div className="empty-state">从左侧选择一条导出批次查看详情。</div>
-              )}
-              {error ? <p className="error-text">{error}</p> : null}
-            </div>
-            <div className="panel">
-              <h3>导出商品</h3>
-              {selectedExport ? (
-                <div className="stack">
-                  {selectedExport.products.map((item) => (
-                    <article key={item.exportProductId} className="list-card">
-                      <header>
-                        <div>
-                          <strong>{item.titleEn}</strong>
-                          <div className="subtle">{item.handle} · {item.quantityTemplateName}</div>
+                ) : (
+                  <div className="empty-state">暂无营销文案标题摘要。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>Shopify Description EN / CN</h3>
+                {activeMarketingResult ? (
+                  <div className="grid-2">
+                    <pre className="code-block">{activeMarketingResult.shopify.description.en}</pre>
+                    <pre className="code-block">{activeMarketingResult.shopify.description.cn}</pre>
+                  </div>
+                ) : (
+                  <div className="empty-state">暂无 Shopify 描述内容。</div>
+                )}
+              </div>
+              <div className="panel">
+                <h3>Facebook Copy EN / CN</h3>
+                {activeMarketingResult ? (
+                  <div className="grid-2">
+                    <pre className="code-block">
+                      {JSON.stringify(
+                        {
+                          primary_text: activeMarketingResult.facebook.primary_text.en,
+                          headline: activeMarketingResult.facebook.headline.en,
+                          description: activeMarketingResult.facebook.description.en,
+                          cta_suggestion: activeMarketingResult.facebook.cta_suggestion.en,
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                    <pre className="code-block">
+                      {JSON.stringify(
+                        {
+                          primary_text: activeMarketingResult.facebook.primary_text.cn,
+                          headline: activeMarketingResult.facebook.headline.cn,
+                          description: activeMarketingResult.facebook.description.cn,
+                          cta_suggestion: activeMarketingResult.facebook.cta_suggestion.cn,
+                        },
+                        null,
+                        2,
+                      )}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="empty-state">暂无 Facebook 文案内容。</div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="panel">
+                <h2>导出批次详情</h2>
+                {selectedExport ? (
+                  <>
+                    <p className="subtle">
+                      批次：{selectedExport.batch.batch_name} · {new Date(selectedExport.batch.created_at).toLocaleString("zh-CN")}
+                    </p>
+                    <p className="subtle">商品数：{selectedExport.batch.product_count}</p>
+                    <div className="button-row" style={{ marginTop: 12 }}>
+                      <a href={selectedExport.batch.sheet_url} target="_blank" rel="noreferrer" className="ghost-button">
+                        打开 Google Sheet
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-state">从左侧选择一条导出批次查看详情。</div>
+                )}
+                {error ? <p className="error-text">{error}</p> : null}
+              </div>
+              <div className="panel">
+                <h3>导出商品</h3>
+                {selectedExport ? (
+                  <div className="stack">
+                    {selectedExport.products.map((item) => (
+                      <article key={item.exportProductId} className="list-card">
+                        <header>
+                          <div>
+                            <strong>{item.titleEn}</strong>
+                            <div className="subtle">{item.handle} · {item.quantityTemplateName}</div>
+                          </div>
+                        </header>
+                        <div className="grid-2" style={{ marginTop: 12 }}>
+                          <div className="history-image-thumb">
+                            {item.frontImageUrl ? <img src={item.frontImageUrl} alt="export front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                          </div>
+                          <div className="history-image-thumb">
+                            {item.backImageUrl ? <img src={item.backImageUrl} alt="export back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
+                          </div>
                         </div>
-                      </header>
-                      <div className="grid-2" style={{ marginTop: 12 }}>
-                        <div className="history-image-thumb">
-                          {item.frontImageUrl ? <img src={item.frontImageUrl} alt="export front" className="generated-image" /> : <div className="empty-state">暂无 Front</div>}
+                        <div className="mono-block">
+                          {JSON.stringify(
+                            {
+                              export_product_id: item.exportProductId,
+                              handle: item.handle,
+                              marketing_copy_version_id: item.marketingCopyVersionId,
+                              variant_overrides: item.variantOverrides,
+                            },
+                            null,
+                            2,
+                          )}
                         </div>
-                        <div className="history-image-thumb">
-                          {item.backImageUrl ? <img src={item.backImageUrl} alt="export back" className="generated-image" /> : <div className="empty-state">暂无 Back</div>}
-                        </div>
-                      </div>
-                      <div className="mono-block">
-                        {JSON.stringify(
-                          {
-                            export_product_id: item.exportProductId,
-                            handle: item.handle,
-                            marketing_copy_version_id: item.marketingCopyVersionId,
-                            variant_overrides: item.variantOverrides,
-                          },
-                          null,
-                          2,
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">暂无导出商品详情。</div>
-              )}
-            </div>
-          </>
-        )}
-        </section>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state">暂无导出商品详情。</div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

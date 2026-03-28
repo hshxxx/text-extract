@@ -429,8 +429,8 @@ export function MarketingCopyClient({
         description="基于主题原文、双面商品图与模板，生成并编辑双语 Shopify 与 Facebook 文案。"
         actions={<span className="status-pill">Bilingual Copy</span>}
       />
-      <div className="grid-2">
-        <section className="panel">
+      <div className="workspace-grid-3">
+        <section className="panel workspace-column">
           <div className="section-header">
             <div>
               <h2>素材列表</h2>
@@ -512,7 +512,7 @@ export function MarketingCopyClient({
         </div>
         </section>
 
-        <section className="stack">
+        <section className="stack workspace-column">
           <div className="panel">
             <h2>当前素材组合</h2>
           {sourceDetail ? (
@@ -634,7 +634,9 @@ export function MarketingCopyClient({
             <div className="empty-state">选择左侧素材后，这里会展示可用的 front/back 成品图和模板设置。</div>
           )}
           </div>
+        </section>
 
+        <section className="stack workspace-column">
           <div className="panel">
             <h2>历史版本</h2>
           <ListControls
@@ -695,8 +697,9 @@ export function MarketingCopyClient({
             </div>
           )}
           </div>
+        </section>
 
-          <div className="panel">
+        <section className="panel workspace-column workspace-span-2">
             <div className="split-header">
               <div>
                 <h2>编辑文案</h2>
@@ -915,7 +918,6 @@ export function MarketingCopyClient({
             ) : (
               <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
             )}
-          </div>
         </section>
       </div>
     </div>

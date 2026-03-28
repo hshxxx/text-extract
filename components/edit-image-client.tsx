@@ -276,8 +276,8 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
         description="从来源图片中选择一张作为当前编辑对象，生成 Front 与 Back 两张商品成品图。"
         actions={<span className="status-pill">Front / Back</span>}
       />
-      <div className="grid-2">
-        <section className="panel">
+      <div className="workspace-grid-3">
+        <section className="panel workspace-column">
           <div className="section-header">
             <div>
               <h2>来源图片列表</h2>
@@ -356,7 +356,7 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
         </div>
         </section>
 
-        <section className="stack">
+        <section className="stack workspace-column">
           <div className="panel">
             <h2>当前来源图</h2>
             {selectedSource ? (
@@ -406,7 +406,9 @@ export function EditImageClient({ initialSources, initialSourceId }: EditImageCl
             )}
             {error ? <p className="error-text">{error}</p> : null}
           </div>
+        </section>
 
+        <section className="stack workspace-column">
           <div className="panel">
             <h2>编辑结果</h2>
           {result ? (

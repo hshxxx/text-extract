@@ -173,8 +173,8 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
         description="输入原始需求，提取固定 Schema 字段，并按模板渲染最终 Prompt。"
         actions={<span className="status-pill success">Fixed Schema</span>}
       />
-      <div className="grid-2">
-        <section className="panel">
+      <div className="workspace-grid-3">
+        <section className="panel workspace-column">
           <div className="section-header">
             <div>
               <h2>输入与配置</h2>
@@ -333,32 +333,33 @@ export function ExtractWorkspace({ models, templates }: ExtractWorkspaceProps) {
         {error ? <p className="error-text">{error}</p> : null}
         </section>
 
-        <section className="stack">
-          <div className="panel">
-            <div className="split-header">
-              <div>
-                <h2>结构化字段</h2>
-                <p className="subtle">固定输出字段共 7 项。</p>
-              </div>
-              {result?.status ? (
-                <span className={`status ${result.status === "success" ? "status-success" : "status-failed"}`}>
-                  {result.status === "success" ? "成功" : "失败"}
-                </span>
-              ) : null}
+        <section className="panel workspace-column">
+          <div className="split-header">
+            <div>
+              <h2>结构化字段</h2>
+              <p className="subtle">固定输出字段共 7 项。</p>
             </div>
-            {result?.structuredData ? (
-              <div className="data-grid">
-                {FIXED_SCHEMA_FIELDS.map((field) => (
-                  <div key={field} className="data-item">
-                    <strong>{field}</strong>
-                    <div>{(result.structuredData as StructuredData)[field] || "空字符串"}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">生成后会在这里展示结构化字段结果。</div>
-            )}
+            {result?.status ? (
+              <span className={`status ${result.status === "success" ? "status-success" : "status-failed"}`}>
+                {result.status === "success" ? "成功" : "失败"}
+              </span>
+            ) : null}
           </div>
+          {result?.structuredData ? (
+            <div className="data-grid">
+              {FIXED_SCHEMA_FIELDS.map((field) => (
+                <div key={field} className="data-item">
+                  <strong>{field}</strong>
+                  <div>{(result.structuredData as StructuredData)[field] || "空字符串"}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">生成后会在这里展示结构化字段结果。</div>
+          )}
+        </section>
+
+        <section className="stack workspace-column">
           <div className="panel">
             <h2>最终 Prompt</h2>
             {result?.finalPrompt ? (

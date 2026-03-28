@@ -235,6 +235,13 @@ img {
   gap: 16px;
 }
 
+.workspace-grid-3,
+.workspace-detail-grid {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
 .grid-2,
 .data-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -242,6 +249,25 @@ img {
 
 .grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workspace-grid-3 {
+  grid-template-columns:
+    minmax(340px, 1.08fr)
+    minmax(300px, 0.96fr)
+    minmax(300px, 0.96fr);
+}
+
+.workspace-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspace-column {
+  min-width: 0;
+}
+
+.workspace-span-2 {
+  grid-column: 2 / span 2;
 }
 
 .workspace-shell,
@@ -835,6 +861,15 @@ td {
   .auth-grid {
     grid-template-columns: 1fr;
   }
+
+  .workspace-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-grid-3 > :first-child,
+  .workspace-span-2 {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 900px) {
@@ -860,9 +895,15 @@ td {
 
   .grid-2,
   .grid-3,
+  .workspace-grid-3,
+  .workspace-detail-grid,
   .data-grid,
   .auth-notes {
     grid-template-columns: 1fr;
+  }
+
+  .workspace-span-2 {
+    grid-column: auto;
   }
 
   .button-row {
