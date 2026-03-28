@@ -421,225 +421,269 @@ export function MarketingCopyClient({
 
   const selectedFrontOption = sourceDetail?.frontOptions.find((item) => item.id === selectedFrontEditJobId) ?? null;
   const selectedBackOption = sourceDetail?.backOptions.find((item) => item.id === selectedBackEditJobId) ?? null;
+  const selectedTemplate = templates.find((item) => item.id === selectedTemplateId) ?? null;
 
   return (
-    <div className="workspace-shell">
+    <div className="workspace-shell marketing-copy-shell">
       <WorkspaceIntro
         title="文案生成"
-        description="基于主题原文、双面商品图与模板，生成并编辑双语 Shopify 与 Facebook 文案。"
+        description="按素材组合、版本切换和双语分区编辑，把 Shopify 与 Facebook 文案集中在一个连续工作面里完成。"
         actions={<span className="status-pill">Bilingual Copy</span>}
       />
-      <div className="grid-2 marketing-copy-layout">
-        <section className="panel">
+      <div className="stack marketing-copy-flow">
+        <section className="panel marketing-copy-panel">
           <div className="section-header">
             <div>
-              <h2>素材列表</h2>
-              <p className="lead">选择来源图后，在右侧指定 Front / Back 成品图、模板和补充要求。</p>
+              <h2>素材选择</h2>
+              <p className="lead">先切换素材，再配置 front / back 成品图与模板，整个工作流会沿着页面向下延续。</p>
             </div>
+            <span className="badge">{sources.length} Sources</span>
           </div>
-        {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
-        {isBootstrapping ? (
-          <div className="stack" style={{ marginBottom: 16 }}>
-            <div className="skeleton-line skeleton-heading" />
-            <div className="skeleton-card" />
-          </div>
-        ) : null}
-        {sources.length === 0 ? (
-          <div className="empty-state">
-            <p>还没有满足条件的素材。先完成图片编辑，并确保至少有一张 Front 和一张 Back 成品图。</p>
-            <Link href="/edit-image" className="primary-button">
-              前往图片编辑
-            </Link>
-          </div>
-        ) : null}
-        <ListControls
-          searchValue={sourceQuery}
-          onSearchChange={(value) => {
-            setSourceQuery(value);
-            setSourcePage(1);
-          }}
-          searchPlaceholder="按素材 ID、Prompt、时间搜索"
-          filterValue={sourceFilter}
-          filterOptions={[
-            { value: "all", label: "全部素材" },
-            { value: "with_history", label: "仅有文案历史" },
-            { value: "without_history", label: "仅无文案历史" },
-          ]}
-          onFilterChange={(value) => {
-            setSourceFilter(value);
-            setSourcePage(1);
-          }}
-          pageSize={sourcePageSize}
-          onPageSizeChange={(value) => {
-            setSourcePageSize(value);
-            setSourcePage(1);
-          }}
-          currentPage={pagedSources.currentPage}
-          totalPages={pagedSources.totalPages}
-          totalItems={pagedSources.totalItems}
-          onPrevPage={() => setSourcePage((current) => current - 1)}
-          onNextPage={() => setSourcePage((current) => current + 1)}
-        />
-        <div className="stack">
-          {pagedSources.totalItems === 0 ? <div className="empty-state">没有匹配的素材记录。</div> : null}
-          {pagedSources.items.map((item) => (
-            <button
-              key={item.sourceImageId}
-              type="button"
-              className={
-                selectedSourceId === item.sourceImageId
-                  ? "list-card prompt-card-selected"
-                  : "list-card prompt-card"
-              }
-              onClick={() => {
-                setSelectedSourceId(item.sourceImageId);
-                setActiveVersionId(null);
-                setActiveVersion(null);
-                setEditableResult(null);
-                setError(null);
-              }}
-            >
-              <div className="split-header">
-                <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
-                <span className="badge">{item.hasHistory ? "Has Copy" : "New"}</span>
+          {bootstrapError ? <p className="error-text">{bootstrapError}</p> : null}
+          {isBootstrapping ? (
+            <div className="stack" style={{ marginBottom: 16 }}>
+              <div className="skeleton-line skeleton-heading" />
+              <div className="skeleton-card" />
+            </div>
+          ) : null}
+          {sources.length === 0 ? (
+            <div className="empty-state">
+              <p>还没有满足条件的素材。先完成图片编辑，并确保至少有一张 Front 和一张 Back 成品图。</p>
+              <Link href="/edit-image" className="primary-button">
+                前往图片编辑
+              </Link>
+            </div>
+          ) : (
+            <div className="stack">
+              <ListControls
+                compact
+                searchValue={sourceQuery}
+                onSearchChange={(value) => {
+                  setSourceQuery(value);
+                  setSourcePage(1);
+                }}
+                searchPlaceholder="按素材 ID、Prompt、时间搜索"
+                filterValue={sourceFilter}
+                filterOptions={[
+                  { value: "all", label: "全部素材" },
+                  { value: "with_history", label: "仅有文案历史" },
+                  { value: "without_history", label: "仅无文案历史" },
+                ]}
+                onFilterChange={(value) => {
+                  setSourceFilter(value);
+                  setSourcePage(1);
+                }}
+                pageSize={sourcePageSize}
+                onPageSizeChange={(value) => {
+                  setSourcePageSize(value);
+                  setSourcePage(1);
+                }}
+                currentPage={pagedSources.currentPage}
+                totalPages={pagedSources.totalPages}
+                totalItems={pagedSources.totalItems}
+                onPrevPage={() => setSourcePage((current) => current - 1)}
+                onNextPage={() => setSourcePage((current) => current + 1)}
+              />
+              {pagedSources.totalItems === 0 ? <div className="empty-state">没有匹配的素材记录。</div> : null}
+              <div className="marketing-copy-source-strip">
+                {pagedSources.items.map((item) => (
+                  <button
+                    key={item.sourceImageId}
+                    type="button"
+                    className={
+                      selectedSourceId === item.sourceImageId
+                        ? "list-card prompt-card-selected marketing-copy-source-card"
+                        : "list-card prompt-card marketing-copy-source-card"
+                    }
+                    onClick={() => {
+                      setSelectedSourceId(item.sourceImageId);
+                      setActiveVersionId(null);
+                      setActiveVersion(null);
+                      setEditableResult(null);
+                      setError(null);
+                    }}
+                  >
+                    <div className="split-header">
+                      <strong>{new Date(item.createdAt).toLocaleString("zh-CN")}</strong>
+                      <span className="badge">{item.hasHistory ? "Has Copy" : "New"}</span>
+                    </div>
+                    <div className="history-image-thumb marketing-copy-source-thumb">
+                      <img src={item.sourceImageUrl} alt="marketing source" className="generated-image" />
+                    </div>
+                    <p className="subtle">{item.promptPreview}</p>
+                  </button>
+                ))}
               </div>
-              <div className="history-image-thumb">
-                <img src={item.sourceImageUrl} alt="marketing source" className="generated-image" />
-              </div>
-              <p className="subtle">{item.promptPreview}</p>
-            </button>
-          ))}
-        </div>
+            </div>
+          )}
         </section>
 
-        <section className="stack marketing-copy-main">
-          <div className="panel">
-            <h2>当前素材组合</h2>
+        <section className="panel marketing-copy-panel">
+          <div className="section-header">
+            <div>
+              <h2>当前素材组合</h2>
+              <p className="lead">左侧锁定主素材，右侧先确认 front / back 成品图，再顺着模板和补充要求完成生成。</p>
+            </div>
+          </div>
           {sourceDetail ? (
-            <div className="stack">
-              <div className="image-frame">
-                <img src={sourceDetail.sourceImageUrl} alt="selected design source" className="generated-image" />
-              </div>
-              <p className="subtle">{sourceDetail.promptPreview}</p>
-              <div className="grid-2">
-                <div className="field">
-                  <label>Front 成品图</label>
-                  <select value={selectedFrontEditJobId} onChange={(event) => setSelectedFrontEditJobId(event.target.value)}>
-                    {sourceDetail.frontOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {new Date(item.createdAt).toLocaleString("zh-CN")} · {item.style}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Back 成品图</label>
-                  <select value={selectedBackEditJobId} onChange={(event) => setSelectedBackEditJobId(event.target.value)}>
-                    {sourceDetail.backOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {new Date(item.createdAt).toLocaleString("zh-CN")} · {item.style}
-                      </option>
-                    ))}
-                  </select>
+            <div className="marketing-copy-composer">
+              <div className="marketing-copy-preview-column">
+                <div className="marketing-copy-preview-block">
+                  <div className="split-header">
+                    <strong>Source</strong>
+                    <span className="badge">{new Date(sourceDetail.createdAt).toLocaleString("zh-CN")}</span>
+                  </div>
+                  <div className="image-frame marketing-copy-hero-frame">
+                    <img src={sourceDetail.sourceImageUrl} alt="selected design source" className="generated-image" />
+                  </div>
+                  <p className="subtle marketing-copy-source-summary">{sourceDetail.promptPreview}</p>
                 </div>
               </div>
-              <div className="grid-2">
-                <div className="history-image-thumb">
-                  {selectedFrontOption ? (
-                    <img src={selectedFrontOption.imageUrl} alt="selected front option" className="generated-image" />
-                  ) : (
-                    <div className="empty-state">暂无 Front 成品图</div>
-                  )}
-                </div>
-                <div className="history-image-thumb">
-                  {selectedBackOption ? (
-                    <img src={selectedBackOption.imageUrl} alt="selected back option" className="generated-image" />
-                  ) : (
-                    <div className="empty-state">暂无 Back 成品图</div>
-                  )}
-                </div>
-              </div>
-              <div className="field">
-                <label>文案模板</label>
-                <select value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
-                  {templates.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="helper">
-                  {templates.find((item) => item.id === selectedTemplateId)?.description ?? "请选择模板。"}
-                </p>
-              </div>
-              <div className="field">
-                <label>补充要求</label>
-                <textarea
-                  rows={4}
-                  value={userInstruction}
-                  placeholder="可选：补充受众、语气、卖点重点、广告方向等要求。"
-                  onChange={(event) => setUserInstruction(event.target.value)}
-                />
-              </div>
-              <div className="button-row primary-group">
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={
-                    isPending ||
-                    !selectedSourceId ||
-                    !selectedFrontEditJobId ||
-                    !selectedBackEditJobId ||
-                    !selectedTemplateId
-                  }
-                  onClick={() =>
-                    startTransition(async () => {
-                      try {
-                        setError(null);
-                        const response = await fetch("/api/marketing-copy/generate", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            sourceImageId: selectedSourceId,
-                            frontEditJobId: selectedFrontEditJobId,
-                            backEditJobId: selectedBackEditJobId,
-                            templateId: selectedTemplateId,
-                            userInstruction,
-                          } satisfies GenerateMarketingCopyRequest),
-                        });
-                        const data = (await response.json()) as { item?: MarketingCopyVersionDetail; error?: string };
 
-                        if (!response.ok) {
-                          throw new Error(data.error ?? "生成营销文案失败。");
-                        }
+              <div className="marketing-copy-config-column">
+                <div className="marketing-copy-dual-preview marketing-copy-dual-preview-top">
+                  <article className="marketing-copy-mini-frame marketing-copy-option-frame">
+                    <div className="split-header">
+                      <strong>Front</strong>
+                      <span className="badge">{selectedFrontOption?.style ?? "未选择"}</span>
+                    </div>
+                    <div className="history-image-thumb marketing-copy-option-thumb">
+                      {selectedFrontOption ? (
+                        <img src={selectedFrontOption.imageUrl} alt="selected front option" className="generated-image" />
+                      ) : (
+                        <div className="empty-state">暂无 Front 成品图</div>
+                      )}
+                    </div>
+                    <div className="field marketing-copy-option-select">
+                      <label>Front 成品图</label>
+                      <select value={selectedFrontEditJobId} onChange={(event) => setSelectedFrontEditJobId(event.target.value)}>
+                        {sourceDetail.frontOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {new Date(item.createdAt).toLocaleString("zh-CN")} · {item.style}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </article>
 
-                        const item = data.item ?? null;
-                        setActiveVersion(item);
-                        setActiveVersionId(item?.version.id ?? null);
-                        setEditableResult(getEditableResult(item));
-                        await refreshVersionsForCurrentCombo();
-                      } catch (generateError) {
-                        setError(generateError instanceof Error ? generateError.message : "生成营销文案失败。");
+                  <article className="marketing-copy-mini-frame marketing-copy-option-frame">
+                    <div className="split-header">
+                      <strong>Back</strong>
+                      <span className="badge">{selectedBackOption?.style ?? "未选择"}</span>
+                    </div>
+                    <div className="history-image-thumb marketing-copy-option-thumb">
+                      {selectedBackOption ? (
+                        <img src={selectedBackOption.imageUrl} alt="selected back option" className="generated-image" />
+                      ) : (
+                        <div className="empty-state">暂无 Back 成品图</div>
+                      )}
+                    </div>
+                    <div className="field marketing-copy-option-select">
+                      <label>Back 成品图</label>
+                      <select value={selectedBackEditJobId} onChange={(event) => setSelectedBackEditJobId(event.target.value)}>
+                        {sourceDetail.backOptions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {new Date(item.createdAt).toLocaleString("zh-CN")} · {item.style}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </article>
+                </div>
+
+                <div className="marketing-copy-config-stack">
+                  <div className="field">
+                    <label>文案模板</label>
+                    <select value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
+                      {templates.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="helper">{selectedTemplate?.description ?? "请选择模板。"}</p>
+                  </div>
+
+                  <div className="marketing-copy-template-note">
+                    <strong>{selectedTemplate?.name ?? "模板未选择"}</strong>
+                    <p>{selectedTemplate?.description ?? "选择模板后，这里会显示当前生成策略的说明。"}</p>
+                  </div>
+
+                  <div className="field marketing-copy-instruction-field">
+                    <label>补充要求</label>
+                    <textarea
+                      rows={5}
+                      value={userInstruction}
+                      placeholder="可选：补充受众、语气、卖点重点、广告方向等要求。"
+                      onChange={(event) => setUserInstruction(event.target.value)}
+                    />
+                  </div>
+
+                  <div className="button-row primary-group marketing-copy-generate-row">
+                    <button
+                      type="button"
+                      className="primary-button"
+                      disabled={
+                        isPending ||
+                        !selectedSourceId ||
+                        !selectedFrontEditJobId ||
+                        !selectedBackEditJobId ||
+                        !selectedTemplateId
                       }
-                    })
-                  }
-                >
-                  {isPending ? "生成中..." : "生成文案"}
-                </button>
+                      onClick={() =>
+                        startTransition(async () => {
+                          try {
+                            setError(null);
+                            const response = await fetch("/api/marketing-copy/generate", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                sourceImageId: selectedSourceId,
+                                frontEditJobId: selectedFrontEditJobId,
+                                backEditJobId: selectedBackEditJobId,
+                                templateId: selectedTemplateId,
+                                userInstruction,
+                              } satisfies GenerateMarketingCopyRequest),
+                            });
+                            const data = (await response.json()) as { item?: MarketingCopyVersionDetail; error?: string };
+
+                            if (!response.ok) {
+                              throw new Error(data.error ?? "生成营销文案失败。");
+                            }
+
+                            const item = data.item ?? null;
+                            setActiveVersion(item);
+                            setActiveVersionId(item?.version.id ?? null);
+                            setEditableResult(getEditableResult(item));
+                            await refreshVersionsForCurrentCombo();
+                          } catch (generateError) {
+                            setError(generateError instanceof Error ? generateError.message : "生成营销文案失败。");
+                          }
+                        })
+                      }
+                    >
+                      {isPending ? "生成中..." : "生成文案"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ) : detailError ? (
             <p className="error-text">{detailError}</p>
           ) : (
-            <div className="empty-state">选择左侧素材后，这里会展示可用的 front/back 成品图和模板设置。</div>
+            <div className="empty-state">选择上方素材后，这里会展示可用的 front / back 成品图和模板设置。</div>
           )}
-          </div>
         </section>
 
-        <section className="stack workspace-column">
-          <div className="panel">
-            <h2>历史版本</h2>
+        <section className="panel marketing-copy-panel">
+          <div className="section-header">
+            <div>
+              <h2>历史版本</h2>
+              <p className="lead">版本横向铺开，当前素材组合下的 draft 和 confirmed 可以快速来回切换。</p>
+            </div>
+          </div>
           <ListControls
+            compact
             searchValue={versionQuery}
             onSearchChange={(value) => {
               setVersionQuery(value);
@@ -670,12 +714,16 @@ export function MarketingCopyClient({
           {pagedVersions.totalItems === 0 ? (
             <div className="empty-state">当前素材组合还没有历史文案版本。</div>
           ) : (
-            <div className="stack">
+            <div className="marketing-copy-version-strip">
               {pagedVersions.items.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  className={activeVersionId === item.id ? "list-card prompt-card-selected" : "list-card prompt-card"}
+                  className={
+                    activeVersionId === item.id
+                      ? "list-card prompt-card-selected marketing-copy-version-card"
+                      : "list-card prompt-card marketing-copy-version-card"
+                  }
                   onClick={() =>
                     startTransition(async () => {
                       try {
@@ -696,192 +744,187 @@ export function MarketingCopyClient({
               ))}
             </div>
           )}
-          </div>
         </section>
 
-        <section className="panel workspace-column workspace-span-2">
-            <div className="split-header">
-              <div>
-                <h2>编辑文案</h2>
-                <p className="helper">支持字段级编辑、保存 final 版本，并在同一素材组合下切换 confirmed。</p>
-              </div>
-              {activeVersion?.version.is_confirmed ? <span className="badge">Confirmed</span> : null}
+        <section className="panel marketing-copy-panel marketing-copy-editor-panel">
+          <div className="section-header">
+            <div>
+              <h2>编辑文案</h2>
+              <p className="lead">按 Shopify / Facebook 与 EN / CN 分成四块横向工作区，扫描路径更短，字段关系更清楚。</p>
             </div>
-            {error ? <p className="error-text">{error}</p> : null}
-            {editableResult && activeVersion ? (
-              <div className="stack marketing-copy-editor">
-                <section className="marketing-copy-section">
-                  <div className="section-header">
-                    <div>
-                      <h3>Shopify Core Copy</h3>
-                      <p className="lead">标题与副标题保持双语并排，便于对照品牌语气和表情节奏。</p>
-                    </div>
+            {activeVersion ? (
+              <span className={activeVersion.version.is_confirmed ? "status-pill success" : "badge"}>
+                {activeVersion.version.is_confirmed ? "Confirmed" : "Draft Editing"}
+              </span>
+            ) : null}
+          </div>
+          {error ? <p className="error-text">{error}</p> : null}
+          {editableResult && activeVersion ? (
+            <div className="marketing-copy-editor">
+              <div className="marketing-copy-editor-grid">
+                <section className="marketing-copy-language-panel">
+                  <div className="marketing-copy-language-head">
+                    <strong>Shopify EN</strong>
+                    <p>标题、副标题、卖点和描述统一在英文区连续编辑。</p>
                   </div>
-                  <div className="grid-2 marketing-copy-paired-grid">
-                    <div className="field">
-                      <label>Shopify Title EN</label>
-                      <input
-                        value={editableResult.shopify.title.en}
-                        onChange={(event) => updateLocalizedField("shopify", "title", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Shopify Title CN</label>
-                      <input
-                        value={editableResult.shopify.title.cn}
-                        onChange={(event) => updateLocalizedField("shopify", "title", "cn", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Shopify Subtitle EN</label>
-                      <input
-                        value={editableResult.shopify.subtitle.en}
-                        onChange={(event) => updateLocalizedField("shopify", "subtitle", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Shopify Subtitle CN</label>
-                      <input
-                        value={editableResult.shopify.subtitle.cn}
-                        onChange={(event) => updateLocalizedField("shopify", "subtitle", "cn", event.target.value)}
-                      />
-                    </div>
+                  <div className="field">
+                    <label>Title</label>
+                    <input
+                      value={editableResult.shopify.title.en}
+                      onChange={(event) => updateLocalizedField("shopify", "title", "en", event.target.value)}
+                    />
                   </div>
-                </section>
-
-                <section className="marketing-copy-section">
-                  <div className="section-header">
-                    <div>
-                      <h3>Shopify Selling Points EN/CN</h3>
-                      <p className="lead">每条卖点独立成卡片，EN / CN 分栏显示，长文本不会再互相挤压。</p>
-                    </div>
+                  <div className="field">
+                    <label>Subtitle</label>
+                    <input
+                      value={editableResult.shopify.subtitle.en}
+                      onChange={(event) => updateLocalizedField("shopify", "subtitle", "en", event.target.value)}
+                    />
                   </div>
-                  <div className="selling-point-cards">
+                  <div className="marketing-copy-inline-stack">
                     {editableResult.shopify.selling_points.map((item, index) => (
-                      <article key={`selling-${index}`} className="selling-point-card">
-                        <div className="split-header selling-point-card-header">
-                          <strong>{`Selling Point ${index + 1}`}</strong>
-                          <span className="badge">EN / CN</span>
-                        </div>
-                        <div className="grid-2 selling-point-grid">
-                          <div className="field">
-                            <label>{`Selling Point ${index + 1} EN`}</label>
-                            <textarea
-                              rows={3}
-                              value={item.en}
-                              onChange={(event) => updateSellingPoint(index, "en", event.target.value)}
-                            />
-                          </div>
-                          <div className="field">
-                            <label>{`Selling Point ${index + 1} CN`}</label>
-                            <textarea
-                              rows={3}
-                              value={item.cn}
-                              onChange={(event) => updateSellingPoint(index, "cn", event.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </article>
+                      <div key={`selling-en-${index}`} className="field marketing-copy-inline-field">
+                        <label>{`Selling Point ${index + 1}`}</label>
+                        <textarea
+                          rows={3}
+                          value={item.en}
+                          onChange={(event) => updateSellingPoint(index, "en", event.target.value)}
+                        />
+                      </div>
                     ))}
                   </div>
-                </section>
-
-                <section className="marketing-copy-section">
-                  <div className="section-header">
-                    <div>
-                      <h3>Shopify Description</h3>
-                      <p className="lead">保留 EN / CN 并排编辑，方便对照 section 结构与信息完整度。</p>
-                    </div>
-                  </div>
-                  <div className="grid-2 marketing-copy-paired-grid">
-                    <div className="field">
-                      <label>Shopify Description EN</label>
-                      <textarea
-                        rows={12}
-                        value={editableResult.shopify.description.en}
-                        onChange={(event) => updateLocalizedField("shopify", "description", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Shopify Description CN</label>
-                      <textarea
-                        rows={12}
-                        value={editableResult.shopify.description.cn}
-                        onChange={(event) => updateLocalizedField("shopify", "description", "cn", event.target.value)}
-                      />
-                    </div>
+                  <div className="field">
+                    <label>Description</label>
+                    <textarea
+                      rows={12}
+                      value={editableResult.shopify.description.en}
+                      onChange={(event) => updateLocalizedField("shopify", "description", "en", event.target.value)}
+                    />
                   </div>
                 </section>
 
-                <section className="marketing-copy-section">
-                  <div className="section-header">
-                    <div>
-                      <h3>Facebook Ad Copy</h3>
-                      <p className="lead">主文案、标题、描述和 CTA 集中编辑，便于统一广告语气与 emoji 覆盖。</p>
-                    </div>
+                <section className="marketing-copy-language-panel">
+                  <div className="marketing-copy-language-head">
+                    <strong>Shopify CN</strong>
+                    <p>中文区和英文区平行排列，方便对照语气与信息完整度。</p>
                   </div>
-                  <div className="grid-2 marketing-copy-paired-grid">
-                    <div className="field">
-                      <label>Facebook Primary Text EN</label>
-                      <textarea
-                        rows={5}
-                        value={editableResult.facebook.primary_text.en}
-                        onChange={(event) => updateLocalizedField("facebook", "primary_text", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Facebook Primary Text CN</label>
-                      <textarea
-                        rows={5}
-                        value={editableResult.facebook.primary_text.cn}
-                        onChange={(event) => updateLocalizedField("facebook", "primary_text", "cn", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Facebook Headline EN</label>
-                      <input
-                        value={editableResult.facebook.headline.en}
-                        onChange={(event) => updateLocalizedField("facebook", "headline", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Facebook Headline CN</label>
-                      <input
-                        value={editableResult.facebook.headline.cn}
-                        onChange={(event) => updateLocalizedField("facebook", "headline", "cn", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Facebook Description EN</label>
-                      <input
-                        value={editableResult.facebook.description.en}
-                        onChange={(event) => updateLocalizedField("facebook", "description", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>Facebook Description CN</label>
-                      <input
-                        value={editableResult.facebook.description.cn}
-                        onChange={(event) => updateLocalizedField("facebook", "description", "cn", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>CTA Suggestion EN</label>
-                      <input
-                        value={editableResult.facebook.cta_suggestion.en}
-                        onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "en", event.target.value)}
-                      />
-                    </div>
-                    <div className="field">
-                      <label>CTA Suggestion CN</label>
-                      <input
-                        value={editableResult.facebook.cta_suggestion.cn}
-                        onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "cn", event.target.value)}
-                      />
-                    </div>
+                  <div className="field">
+                    <label>标题</label>
+                    <input
+                      value={editableResult.shopify.title.cn}
+                      onChange={(event) => updateLocalizedField("shopify", "title", "cn", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>副标题</label>
+                    <input
+                      value={editableResult.shopify.subtitle.cn}
+                      onChange={(event) => updateLocalizedField("shopify", "subtitle", "cn", event.target.value)}
+                    />
+                  </div>
+                  <div className="marketing-copy-inline-stack">
+                    {editableResult.shopify.selling_points.map((item, index) => (
+                      <div key={`selling-cn-${index}`} className="field marketing-copy-inline-field">
+                        <label>{`卖点 ${index + 1}`}</label>
+                        <textarea
+                          rows={3}
+                          value={item.cn}
+                          onChange={(event) => updateSellingPoint(index, "cn", event.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="field">
+                    <label>描述</label>
+                    <textarea
+                      rows={12}
+                      value={editableResult.shopify.description.cn}
+                      onChange={(event) => updateLocalizedField("shopify", "description", "cn", event.target.value)}
+                    />
                   </div>
                 </section>
 
+                <section className="marketing-copy-language-panel">
+                  <div className="marketing-copy-language-head">
+                    <strong>Facebook EN</strong>
+                    <p>保持投放文案的操作独立，避免和 Shopify 长文案互相干扰。</p>
+                  </div>
+                  <div className="field">
+                    <label>Primary Text</label>
+                    <textarea
+                      rows={6}
+                      value={editableResult.facebook.primary_text.en}
+                      onChange={(event) => updateLocalizedField("facebook", "primary_text", "en", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Headline</label>
+                    <input
+                      value={editableResult.facebook.headline.en}
+                      onChange={(event) => updateLocalizedField("facebook", "headline", "en", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Description</label>
+                    <input
+                      value={editableResult.facebook.description.en}
+                      onChange={(event) => updateLocalizedField("facebook", "description", "en", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>CTA Suggestion</label>
+                    <input
+                      value={editableResult.facebook.cta_suggestion.en}
+                      onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "en", event.target.value)}
+                    />
+                  </div>
+                </section>
+
+                <section className="marketing-copy-language-panel">
+                  <div className="marketing-copy-language-head">
+                    <strong>Facebook CN</strong>
+                    <p>中文投放短文案放在同一列内，编辑和确认时不再需要上下跳读。</p>
+                  </div>
+                  <div className="field">
+                    <label>主文案</label>
+                    <textarea
+                      rows={6}
+                      value={editableResult.facebook.primary_text.cn}
+                      onChange={(event) => updateLocalizedField("facebook", "primary_text", "cn", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>标题</label>
+                    <input
+                      value={editableResult.facebook.headline.cn}
+                      onChange={(event) => updateLocalizedField("facebook", "headline", "cn", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>描述</label>
+                    <input
+                      value={editableResult.facebook.description.cn}
+                      onChange={(event) => updateLocalizedField("facebook", "description", "cn", event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>CTA 建议</label>
+                    <input
+                      value={editableResult.facebook.cta_suggestion.cn}
+                      onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "cn", event.target.value)}
+                    />
+                  </div>
+                </section>
+              </div>
+
+              <div className="marketing-copy-action-bar">
+                <div className="marketing-copy-action-copy">
+                  <strong>{activeVersion.template?.name ?? "当前版本"}</strong>
+                  <p>
+                    {activeVersion.version.is_confirmed ? "已确认版本" : "草稿版本"} ·{" "}
+                    {new Date(activeVersion.version.updated_at).toLocaleString("zh-CN")}
+                  </p>
+                </div>
                 <div className="button-row">
                   <button
                     type="button"
@@ -958,9 +1001,10 @@ export function MarketingCopyClient({
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
-            )}
+            </div>
+          ) : (
+            <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
+          )}
         </section>
       </div>
     </div>

@@ -21,6 +21,7 @@ type ListControlsProps = {
   totalItems: number;
   onPrevPage: () => void;
   onNextPage: () => void;
+  compact?: boolean;
 };
 
 export function ListControls({
@@ -37,11 +38,12 @@ export function ListControls({
   totalItems,
   onPrevPage,
   onNextPage,
+  compact = false,
 }: ListControlsProps) {
   return (
-    <div className="stack" style={{ gap: 12 }}>
-      <div className="control-row" style={{ alignItems: "flex-end" }}>
-        <div className="field" style={{ flex: "1 1 260px", marginBottom: 0 }}>
+    <div className={compact ? "stack list-controls list-controls-compact" : "stack list-controls"} style={{ gap: 12 }}>
+      <div className={compact ? "control-row list-controls-row" : "control-row"} style={{ alignItems: "flex-end" }}>
+        <div className={compact ? "field list-controls-field" : "field"} style={{ flex: "1 1 260px", marginBottom: 0 }}>
           <label>搜索</label>
           <input
             value={searchValue}
@@ -50,7 +52,7 @@ export function ListControls({
           />
         </div>
         {filterOptions && filterOptions.length > 0 && filterValue !== undefined && onFilterChange ? (
-          <div className="field" style={{ minWidth: 160, marginBottom: 0 }}>
+          <div className={compact ? "field list-controls-field" : "field"} style={{ minWidth: 160, marginBottom: 0 }}>
             <label>筛选</label>
             <select value={filterValue} onChange={(event) => onFilterChange(event.target.value)}>
               {filterOptions.map((option) => (
@@ -61,7 +63,7 @@ export function ListControls({
             </select>
           </div>
         ) : null}
-        <div className="field" style={{ minWidth: 140, marginBottom: 0 }}>
+        <div className={compact ? "field list-controls-field" : "field"} style={{ minWidth: 140, marginBottom: 0 }}>
           <label>每页条数</label>
           <select value={String(pageSize)} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
             {PAGE_SIZE_OPTIONS.map((option) => (
@@ -72,11 +74,11 @@ export function ListControls({
           </select>
         </div>
       </div>
-      <div className="split-header">
+      <div className={compact ? "split-header list-controls-footer" : "split-header"}>
         <p className="helper">
           共 {totalItems} 条 · 第 {currentPage}/{totalPages} 页
         </p>
-        <div className="button-row">
+        <div className={compact ? "button-row list-controls-actions" : "button-row"}>
           <button type="button" className="ghost-button" disabled={currentPage <= 1} onClick={onPrevPage}>
             上一页
           </button>

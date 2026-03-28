@@ -178,6 +178,7 @@ function normalizeShopifySectionBody(
 function compactStructuredShopifyDescription(text: string, language: "en" | "cn") {
   const headings =
     language === "en" ? [...SHOPIFY_DESCRIPTION_HEADINGS_EN] : [...SHOPIFY_DESCRIPTION_HEADINGS_CN];
+  const headingSet = new Set<string>(headings);
   const lines = splitNonEmptyLines(text);
   const sectionBodies = new Map<string, string[]>();
   let currentHeading: string | null = null;
@@ -185,7 +186,7 @@ function compactStructuredShopifyDescription(text: string, language: "en" | "cn"
   headings.forEach((heading) => sectionBodies.set(heading, []));
 
   for (const line of lines) {
-    if (headings.includes(line as (typeof headings)[number])) {
+    if (headingSet.has(line)) {
       currentHeading = line;
       continue;
     }
