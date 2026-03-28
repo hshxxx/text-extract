@@ -54,6 +54,23 @@ type ResolvedEditSelection = {
   back: EditJobRecord;
 };
 
+const SHOPIFY_DESCRIPTION_HEADINGS_EN = [
+  "Overview",
+  "Front Design",
+  "Back Design",
+  "Why This Coin Stands Out",
+] as const;
+
+const SHOPIFY_DESCRIPTION_HEADINGS_CN = [
+  "概览",
+  "正面设计",
+  "背面设计",
+  "这枚纪念币为何脱颖而出",
+] as const;
+
+const SHOPIFY_SECTION_EMOJI_EN = ["✨", "🛡️", "🎖️", "🎁"] as const;
+const SHOPIFY_SECTION_EMOJI_CN = ["✨", "🛡️", "🎖️", "🎁"] as const;
+
 function getBaseUrl(baseUrl?: string | null) {
   const normalized = (baseUrl || "https://api.openai.com/v1").replace(/\/$/, "");
   if (normalized.endsWith("/chat/completions")) {
@@ -88,51 +105,145 @@ function toLocalizedText(value: unknown): MarketingCopyLocalizedText {
   };
 }
 
-function ensureShopifyDescription(value: string, language: "en" | "cn") {
+function splitNonEmptyLines(text: string) {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function hasEmoji(text: string) {
+  return /\p{Extended_Pictographic}/u.test(text);
+}
+
+function shortenEnglishSection(text: string, maxSentences: number, maxLength: number) {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+
+  const sentences = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  const limitedBySentence = (sentences.length ? sentences.slice(0, maxSentences) : [cleaned]).join(" ");
+  if (limitedBySentence.length <= maxLength) {
+    return limitedBySentence;
+  }
+
+  const clipped = limitedBySentence.slice(0, maxLength).replace(/\s+\S*$/, "").trim();
+  return clipped.endsWith(".") || clipped.endsWith("!") || clipped.endsWith("?")
+    ? clipped
+    : `${clipped}.`;
+}
+
+function shortenChineseSection(text: string, maxSentences: number, maxLength: number) {
+  const cleaned = text.replace(/\s+/g, "").trim();
+  if (!cleaned) return "";
+
+  const sentences = cleaned
+    .split(/(?<=[。！？])/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  const limitedBySentence = (sentences.length ? sentences.slice(0, maxSentences) : [cleaned]).join("");
+  if (limitedBySentence.length <= maxLength) {
+    return limitedBySentence;
+  }
+
+  const clipped = limitedBySentence.slice(0, maxLength).trim();
+  return /[。！？]$/.test(clipped) ? clipped : `${clipped}。`;
+}
+
+function normalizeShopifySectionBody(
+  body: string,
+  language: "en" | "cn",
+  sectionIndex: number,
+) {
+  const flattened = splitNonEmptyLines(body).join(language === "en" ? " " : "");
+  const compact =
+    language === "en"
+      ? shortenEnglishSection(flattened, sectionIndex < 3 ? 2 : 2, sectionIndex < 3 ? 140 : 180)
+      : shortenChineseSection(flattened, sectionIndex < 3 ? 2 : 2, sectionIndex < 3 ? 60 : 80);
+
+  const emoji = language === "en" ? SHOPIFY_SECTION_EMOJI_EN[sectionIndex] : SHOPIFY_SECTION_EMOJI_CN[sectionIndex];
+  if (!compact) {
+    return emoji;
+  }
+
+  return hasEmoji(compact) ? compact : `${compact} ${emoji}`.trim();
+}
+
+function compactStructuredShopifyDescription(text: string, language: "en" | "cn") {
+  const headings =
+    language === "en" ? [...SHOPIFY_DESCRIPTION_HEADINGS_EN] : [...SHOPIFY_DESCRIPTION_HEADINGS_CN];
+  const lines = splitNonEmptyLines(text);
+  const sectionBodies = new Map<string, string[]>();
+  let currentHeading: string | null = null;
+
+  headings.forEach((heading) => sectionBodies.set(heading, []));
+
+  for (const line of lines) {
+    if (headings.includes(line as (typeof headings)[number])) {
+      currentHeading = line;
+      continue;
+    }
+
+    if (currentHeading) {
+      sectionBodies.get(currentHeading)?.push(line);
+    }
+  }
+
+  return headings
+    .map((heading, index) => [
+      heading,
+      normalizeShopifySectionBody((sectionBodies.get(heading) ?? []).join("\n"), language, index),
+    ].join("\n"))
+    .join("\n\n");
+}
+
+export function ensureShopifyDescription(value: string, language: "en" | "cn") {
   const text = value.trim();
 
   if (language === "en") {
-    const headings = ["Overview", "Front Design", "Back Design", "Why This Coin Stands Out"];
-    if (headings.every((heading) => text.includes(heading))) {
-      return text;
+    if (SHOPIFY_DESCRIPTION_HEADINGS_EN.every((heading) => text.includes(heading))) {
+      return compactStructuredShopifyDescription(text, language);
     }
 
-    return [
+    return compactStructuredShopifyDescription([
       "Overview",
-      text || "A premium commemorative challenge coin created to honor the theme, symbolism, and story behind this design.",
+      text || "A polished commemorative coin that captures the theme in a gift-ready, display-worthy keepsake. ✨",
       "",
       "Front Design",
-      "Describe the obverse composition, engraved wording, and main visual symbols shown on the coin.",
+      "The front centers the main emblem and engraved message in a crisp, high-relief composition. 🛡️",
       "",
       "Back Design",
-      "Explain the reverse artwork, engraved text, and symbolic meaning represented on the back of the coin.",
+      "The back adds supporting artwork and symbolism that make the story feel complete and collectible. 🎖️",
       "",
       "Why This Coin Stands Out",
-      "Highlight the emotional value, display quality, gifting appeal, and collectible craftsmanship of this challenge coin.",
-    ].join("\n");
+      "Made for meaningful gifting and proud display, this coin pairs ceremonial value with a premium finish. 🎁",
+    ].join("\n"), language);
   }
 
-  const headings = ["概览", "正面设计", "背面设计", "这枚纪念币为何脱颖而出"];
-  if (headings.every((heading) => text.includes(heading))) {
-    return text;
+  if (SHOPIFY_DESCRIPTION_HEADINGS_CN.every((heading) => text.includes(heading))) {
+    return compactStructuredShopifyDescription(text, language);
   }
 
-  return [
+  return compactStructuredShopifyDescription([
     "概览",
-    text || "这是一枚围绕主题、纪念意义与象征元素打造的高品质纪念币，适合收藏、陈列与纪念赠礼。",
+    text || "这是一枚围绕主题打造的纪念币，兼顾陈列质感、收藏价值与赠礼意义。 ✨",
     "",
     "正面设计",
-    "说明纪念币正面的主要画面、浮雕元素、刻字内容和整体视觉表达。",
+    "正面聚焦核心徽章与刻字，画面利落，浮雕层次清晰。 🛡️",
     "",
     "背面设计",
-    "说明纪念币背面的主要元素、文字布局以及象征含义。",
+    "背面用补充图案和象征元素收住主题，整体更完整耐看。 🎖️",
     "",
     "这枚纪念币为何脱颖而出",
-    "总结这枚纪念币的纪念价值、礼赠意义、收藏属性和工艺质感。",
-  ].join("\n");
+    "它既有纪念意义，也有礼赠和收藏属性，成品观感更精致。 🎁",
+  ].join("\n"), language);
 }
 
-function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
+export function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
   const parsed = marketingCopyResultSchema.parse(value);
   const sellingPoints = [...parsed.shopify.selling_points].slice(0, 4).map(toLocalizedText);
 
@@ -159,7 +270,7 @@ function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
   };
 }
 
-function buildMarketingCopySystemPrompt() {
+export function buildMarketingCopySystemPrompt() {
   return [
     "You generate bilingual ecommerce marketing copy for commemorative challenge coins.",
     "Return JSON only.",
@@ -188,6 +299,11 @@ function buildMarketingCopySystemPrompt() {
     "- Shopify selling_points must contain exactly 4 items.",
     "- Shopify description in English must include sections: Overview, Front Design, Back Design, Why This Coin Stands Out.",
     "- Shopify description in Chinese must include sections: 概览, 正面设计, 背面设计, 这枚纪念币为何脱颖而出.",
+    "- Keep the English section headings exactly unchanged so downstream export can detect them reliably.",
+    "- In Shopify description, Overview, Front Design, and Back Design must each be 1-2 short sentences with high information density.",
+    "- Keep Shopify wording concise, product-page friendly, and easy to scan instead of long explanatory paragraphs.",
+    "- Use a moderate amount of emoji in Shopify description body text for both English and Chinese, but never place emoji inside English section headings.",
+    "- Why This Coin Stands Out can be slightly fuller, but still concise and commercially polished.",
     "- Facebook copy should be concise, persuasive, and ad-ready.",
     "- Preserve factual consistency with the uploaded coin images and source theme.",
   ].join("\n");

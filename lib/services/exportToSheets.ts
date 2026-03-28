@@ -133,7 +133,11 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function convertDescriptionToBodyHtml(description: string, frontImageUrl: string, backImageUrl: string) {
+export function convertDescriptionToBodyHtml(
+  description: string,
+  frontImageUrl: string,
+  backImageUrl: string,
+) {
   const headings = new Set(["Overview", "Front Design", "Back Design", "Why This Coin Stands Out"]);
   const lines = splitParagraphs(description);
 
