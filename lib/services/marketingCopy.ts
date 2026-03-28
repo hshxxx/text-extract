@@ -28,6 +28,8 @@ const localizedTextSchema = z.object({
   cn: z.string().optional().default(""),
 });
 
+const emojiPattern = /(?:\p{Extended_Pictographic}|\p{Regional_Indicator})/gu;
+
 const marketingCopyResultSchema = z.object({
   shopify: z.object({
     title: localizedTextSchema.optional().default({ en: "", cn: "" }),
@@ -132,7 +134,32 @@ function ensureShopifyDescription(value: string, language: "en" | "cn") {
   ].join("\n");
 }
 
-function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
+function countEmoji(value: string) {
+  return [...value.matchAll(emojiPattern)].length;
+}
+
+type MarketingCopyEmojiCoverageIssue = {
+  field: string;
+  language: "en" | "cn";
+  minimum: number;
+  actual: number;
+};
+
+function validateLocalizedEmojiCount(
+  issues: MarketingCopyEmojiCoverageIssue[],
+  field: string,
+  value: MarketingCopyLocalizedText,
+  minimum: number,
+) {
+  (["en", "cn"] as const).forEach((language) => {
+    const actual = countEmoji(value[language]);
+    if (actual < minimum) {
+      issues.push({ field, language, minimum, actual });
+    }
+  });
+}
+
+export function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
   const parsed = marketingCopyResultSchema.parse(value);
   const sellingPoints = [...parsed.shopify.selling_points].slice(0, 4).map(toLocalizedText);
 
@@ -159,7 +186,39 @@ function normalizeMarketingCopyResult(value: unknown): MarketingCopyResult {
   };
 }
 
-function buildMarketingCopySystemPrompt() {
+export function getMarketingCopyEmojiCoverageIssues(result: MarketingCopyResult) {
+  const issues: MarketingCopyEmojiCoverageIssue[] = [];
+
+  validateLocalizedEmojiCount(issues, "shopify.subtitle", result.shopify.subtitle, 1);
+  validateLocalizedEmojiCount(issues, "shopify.description", result.shopify.description, 1);
+  result.shopify.selling_points.forEach((item, index) => {
+    validateLocalizedEmojiCount(issues, `shopify.selling_points.${index}`, item, 1);
+  });
+  validateLocalizedEmojiCount(issues, "facebook.primary_text", result.facebook.primary_text, 2);
+  validateLocalizedEmojiCount(issues, "facebook.headline", result.facebook.headline, 1);
+  validateLocalizedEmojiCount(issues, "facebook.description", result.facebook.description, 1);
+  validateLocalizedEmojiCount(issues, "facebook.cta_suggestion", result.facebook.cta_suggestion, 1);
+
+  return issues;
+}
+
+function formatEmojiCoverageIssues(issues: MarketingCopyEmojiCoverageIssue[]) {
+  return issues
+    .map((issue) => `${issue.field}.${issue.language} needs >= ${issue.minimum} emoji, got ${issue.actual}`)
+    .join("; ");
+}
+
+function buildMarketingCopySystemPrompt(options?: { emojiRetry?: boolean }) {
+  const emojiRules = [
+    "- Add tasteful, commerce-friendly emojis that fit commemorative coins. Avoid childish or unrelated emojis.",
+    "- Shopify subtitle in English and Chinese must each include at least 1 emoji.",
+    "- Each Shopify selling point in English and Chinese must include at least 1 emoji.",
+    "- Shopify description in English and Chinese should each include at least 1 emoji across the full description.",
+    "- Facebook primary_text in English and Chinese must each include 2 to 3 emojis.",
+    "- Facebook headline, description, and cta_suggestion in English and Chinese must each include at least 1 emoji.",
+    "- Keep emoji usage tasteful and premium. Do not stuff emojis into every sentence.",
+  ];
+
   return [
     "You generate bilingual ecommerce marketing copy for commemorative challenge coins.",
     "Return JSON only.",
@@ -190,6 +249,10 @@ function buildMarketingCopySystemPrompt() {
     "- Shopify description in Chinese must include sections: 概览, 正面设计, 背面设计, 这枚纪念币为何脱颖而出.",
     "- Facebook copy should be concise, persuasive, and ad-ready.",
     "- Preserve factual consistency with the uploaded coin images and source theme.",
+    ...emojiRules,
+    options?.emojiRetry
+      ? "- CRITICAL: the previous response failed emoji coverage requirements. Make sure every required field now satisfies the emoji counts."
+      : "- Ensure emoji coverage is correct on the first pass.",
   ].join("\n");
 }
 
@@ -198,11 +261,13 @@ function buildMarketingCopyUserPrompt({
   rawInput,
   promptPreview,
   userInstruction,
+  emojiRetryInstruction,
 }: {
   template: MarketingCopyTemplateRecord;
   rawInput: string;
   promptPreview: string;
   userInstruction?: string | null;
+  emojiRetryInstruction?: string | null;
 }) {
   return [
     `Selected template: ${template.name}`,
@@ -221,6 +286,9 @@ function buildMarketingCopyUserPrompt({
     "- The second uploaded image is the edited BACK product image.",
     "- Keep the tone premium, specific, and commercially usable.",
     "- Do not mention internal workflow, AI generation, or prompt engineering.",
+    emojiRetryInstruction?.trim()
+      ? `Emoji correction instruction:\n${emojiRetryInstruction.trim()}`
+      : "Emoji correction instruction:\nNone.",
     userInstruction?.trim()
       ? `Additional user instruction:\n${userInstruction.trim()}`
       : "Additional user instruction:\nNone.",
@@ -229,11 +297,13 @@ function buildMarketingCopyUserPrompt({
 
 async function postMarketingCopyCompletion({
   modelConfig,
+  systemPrompt,
   prompt,
   frontImageUrl,
   backImageUrl,
 }: {
   modelConfig: Pick<ModelConfigRecord, "model" | "base_url"> & { apiKey: string };
+  systemPrompt: string;
   prompt: string;
   frontImageUrl: string;
   backImageUrl: string;
@@ -250,7 +320,7 @@ async function postMarketingCopyCompletion({
         response_format: { type: "json_object" },
         temperature: 0.7,
         messages: [
-          { role: "system", content: buildMarketingCopySystemPrompt() },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
             content: [
@@ -302,6 +372,30 @@ async function getDefaultTextModelConfig(supabase: SupabaseClient, userId: strin
   }
 
   throw new Error("未找到可用的文本模型配置。");
+}
+
+export async function generateMarketingCopyWithEmojiRetry(
+  runner: (options: { attempt: number; emojiRetryInstruction: string | null }) => Promise<string>,
+) {
+  let issues: MarketingCopyEmojiCoverageIssue[] = [];
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const rawOutput = await runner({
+      attempt,
+      emojiRetryInstruction:
+        attempt === 0 || issues.length === 0
+          ? null
+          : `The last draft missed required emoji coverage. Fix these fields: ${formatEmojiCoverageIssues(issues)}.`,
+    });
+    const normalized = normalizeMarketingCopyResult(parseModelJson(rawOutput));
+    issues = getMarketingCopyEmojiCoverageIssues(normalized);
+
+    if (issues.length === 0 || attempt === 1) {
+      return normalized;
+    }
+  }
+
+  throw new Error("未能生成符合 emoji 要求的营销文案。");
 }
 
 async function resolveSourceBundle(
@@ -798,23 +892,26 @@ export async function generateMarketingCopyVersion(
     throw new Error("所选文案模板不存在。");
   }
 
-  const rawOutput = await postMarketingCopyCompletion({
-    modelConfig: {
-      model: modelConfig.model,
-      base_url: modelConfig.base_url,
-      apiKey: decryptSecret(modelConfig.api_key_encrypted),
-    },
-    prompt: buildMarketingCopyUserPrompt({
-      template,
-      rawInput: bundle.extractionJob.raw_input,
-      promptPreview: getPromptPreview(bundle.extractionJob),
-      userInstruction: input.userInstruction,
+  const apiKey = decryptSecret(modelConfig.api_key_encrypted);
+  const normalized = await generateMarketingCopyWithEmojiRetry(async ({ attempt, emojiRetryInstruction }) =>
+    postMarketingCopyCompletion({
+      modelConfig: {
+        model: modelConfig.model,
+        base_url: modelConfig.base_url,
+        apiKey,
+      },
+      systemPrompt: buildMarketingCopySystemPrompt({ emojiRetry: attempt > 0 }),
+      prompt: buildMarketingCopyUserPrompt({
+        template,
+        rawInput: bundle.extractionJob.raw_input,
+        promptPreview: getPromptPreview(bundle.extractionJob),
+        userInstruction: input.userInstruction,
+        emojiRetryInstruction,
+      }),
+      frontImageUrl: selectedEdits.front.image_url ?? "",
+      backImageUrl: selectedEdits.back.image_url ?? "",
     }),
-    frontImageUrl: selectedEdits.front.image_url ?? "",
-    backImageUrl: selectedEdits.back.image_url ?? "",
-  });
-
-  const normalized = normalizeMarketingCopyResult(parseModelJson(rawOutput));
+  );
 
   const { data, error } = await supabase
     .from("marketing_copy_versions")

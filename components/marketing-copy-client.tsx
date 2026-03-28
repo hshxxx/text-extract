@@ -429,7 +429,7 @@ export function MarketingCopyClient({
         description="基于主题原文、双面商品图与模板，生成并编辑双语 Shopify 与 Facebook 文案。"
         actions={<span className="status-pill">Bilingual Copy</span>}
       />
-      <div className="grid-2">
+      <div className="grid-2 marketing-copy-layout">
         <section className="panel">
           <div className="section-header">
             <div>
@@ -512,7 +512,7 @@ export function MarketingCopyClient({
         </div>
         </section>
 
-        <section className="stack">
+        <section className="stack marketing-copy-main">
           <div className="panel">
             <h2>当前素材组合</h2>
           {sourceDetail ? (
@@ -706,211 +706,254 @@ export function MarketingCopyClient({
             </div>
             {error ? <p className="error-text">{error}</p> : null}
             {editableResult && activeVersion ? (
-              <div className="stack">
-              <div className="grid-2">
-                <div className="field">
-                  <label>Shopify Title EN</label>
-                  <input
-                    value={editableResult.shopify.title.en}
-                    onChange={(event) => updateLocalizedField("shopify", "title", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Shopify Title CN</label>
-                  <input
-                    value={editableResult.shopify.title.cn}
-                    onChange={(event) => updateLocalizedField("shopify", "title", "cn", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Shopify Subtitle EN</label>
-                  <input
-                    value={editableResult.shopify.subtitle.en}
-                    onChange={(event) => updateLocalizedField("shopify", "subtitle", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Shopify Subtitle CN</label>
-                  <input
-                    value={editableResult.shopify.subtitle.cn}
-                    onChange={(event) => updateLocalizedField("shopify", "subtitle", "cn", event.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid-2">
-                <div className="stack">
-                  <h3>Shopify Selling Points EN/CN</h3>
-                  {editableResult.shopify.selling_points.map((item, index) => (
-                    <div key={`selling-${index}`} className="grid-2">
-                      <div className="field">
-                        <label>{`Selling Point ${index + 1} EN`}</label>
-                        <input value={item.en} onChange={(event) => updateSellingPoint(index, "en", event.target.value)} />
-                      </div>
-                      <div className="field">
-                        <label>{`Selling Point ${index + 1} CN`}</label>
-                        <input value={item.cn} onChange={(event) => updateSellingPoint(index, "cn", event.target.value)} />
-                      </div>
+              <div className="stack marketing-copy-editor">
+                <section className="marketing-copy-section">
+                  <div className="section-header">
+                    <div>
+                      <h3>Shopify Core Copy</h3>
+                      <p className="lead">标题与副标题保持双语并排，便于对照品牌语气和表情节奏。</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                  <div className="grid-2 marketing-copy-paired-grid">
+                    <div className="field">
+                      <label>Shopify Title EN</label>
+                      <input
+                        value={editableResult.shopify.title.en}
+                        onChange={(event) => updateLocalizedField("shopify", "title", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Shopify Title CN</label>
+                      <input
+                        value={editableResult.shopify.title.cn}
+                        onChange={(event) => updateLocalizedField("shopify", "title", "cn", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Shopify Subtitle EN</label>
+                      <input
+                        value={editableResult.shopify.subtitle.en}
+                        onChange={(event) => updateLocalizedField("shopify", "subtitle", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Shopify Subtitle CN</label>
+                      <input
+                        value={editableResult.shopify.subtitle.cn}
+                        onChange={(event) => updateLocalizedField("shopify", "subtitle", "cn", event.target.value)}
+                      />
+                    </div>
+                  </div>
+                </section>
 
-              <div className="grid-2">
-                <div className="field">
-                  <label>Shopify Description EN</label>
-                  <textarea
-                    rows={12}
-                    value={editableResult.shopify.description.en}
-                    onChange={(event) => updateLocalizedField("shopify", "description", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Shopify Description CN</label>
-                  <textarea
-                    rows={12}
-                    value={editableResult.shopify.description.cn}
-                    onChange={(event) => updateLocalizedField("shopify", "description", "cn", event.target.value)}
-                  />
-                </div>
-              </div>
+                <section className="marketing-copy-section">
+                  <div className="section-header">
+                    <div>
+                      <h3>Shopify Selling Points EN/CN</h3>
+                      <p className="lead">每条卖点独立成卡片，EN / CN 分栏显示，长文本不会再互相挤压。</p>
+                    </div>
+                  </div>
+                  <div className="selling-point-cards">
+                    {editableResult.shopify.selling_points.map((item, index) => (
+                      <article key={`selling-${index}`} className="selling-point-card">
+                        <div className="split-header selling-point-card-header">
+                          <strong>{`Selling Point ${index + 1}`}</strong>
+                          <span className="badge">EN / CN</span>
+                        </div>
+                        <div className="grid-2 selling-point-grid">
+                          <div className="field">
+                            <label>{`Selling Point ${index + 1} EN`}</label>
+                            <textarea
+                              rows={3}
+                              value={item.en}
+                              onChange={(event) => updateSellingPoint(index, "en", event.target.value)}
+                            />
+                          </div>
+                          <div className="field">
+                            <label>{`Selling Point ${index + 1} CN`}</label>
+                            <textarea
+                              rows={3}
+                              value={item.cn}
+                              onChange={(event) => updateSellingPoint(index, "cn", event.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
 
-              <div className="grid-2">
-                <div className="field">
-                  <label>Facebook Primary Text EN</label>
-                  <textarea
-                    rows={5}
-                    value={editableResult.facebook.primary_text.en}
-                    onChange={(event) => updateLocalizedField("facebook", "primary_text", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Facebook Primary Text CN</label>
-                  <textarea
-                    rows={5}
-                    value={editableResult.facebook.primary_text.cn}
-                    onChange={(event) => updateLocalizedField("facebook", "primary_text", "cn", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Facebook Headline EN</label>
-                  <input
-                    value={editableResult.facebook.headline.en}
-                    onChange={(event) => updateLocalizedField("facebook", "headline", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Facebook Headline CN</label>
-                  <input
-                    value={editableResult.facebook.headline.cn}
-                    onChange={(event) => updateLocalizedField("facebook", "headline", "cn", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Facebook Description EN</label>
-                  <input
-                    value={editableResult.facebook.description.en}
-                    onChange={(event) => updateLocalizedField("facebook", "description", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>Facebook Description CN</label>
-                  <input
-                    value={editableResult.facebook.description.cn}
-                    onChange={(event) => updateLocalizedField("facebook", "description", "cn", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>CTA Suggestion EN</label>
-                  <input
-                    value={editableResult.facebook.cta_suggestion.en}
-                    onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "en", event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label>CTA Suggestion CN</label>
-                  <input
-                    value={editableResult.facebook.cta_suggestion.cn}
-                    onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "cn", event.target.value)}
-                  />
-                </div>
-              </div>
+                <section className="marketing-copy-section">
+                  <div className="section-header">
+                    <div>
+                      <h3>Shopify Description</h3>
+                      <p className="lead">保留 EN / CN 并排编辑，方便对照 section 结构与信息完整度。</p>
+                    </div>
+                  </div>
+                  <div className="grid-2 marketing-copy-paired-grid">
+                    <div className="field">
+                      <label>Shopify Description EN</label>
+                      <textarea
+                        rows={12}
+                        value={editableResult.shopify.description.en}
+                        onChange={(event) => updateLocalizedField("shopify", "description", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Shopify Description CN</label>
+                      <textarea
+                        rows={12}
+                        value={editableResult.shopify.description.cn}
+                        onChange={(event) => updateLocalizedField("shopify", "description", "cn", event.target.value)}
+                      />
+                    </div>
+                  </div>
+                </section>
 
-              <div className="button-row">
-                <button
-                  type="button"
-                  className="ghost-button"
-                  disabled={isPending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      try {
-                        const response = await fetch(`/api/marketing-copy/${activeVersion.version.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ finalResult: editableResult }),
-                        });
-                        const data = (await response.json()) as { item?: MarketingCopyVersionDetail; error?: string };
-                        if (!response.ok) {
-                          throw new Error(data.error ?? "保存最终文案失败。");
+                <section className="marketing-copy-section">
+                  <div className="section-header">
+                    <div>
+                      <h3>Facebook Ad Copy</h3>
+                      <p className="lead">主文案、标题、描述和 CTA 集中编辑，便于统一广告语气与 emoji 覆盖。</p>
+                    </div>
+                  </div>
+                  <div className="grid-2 marketing-copy-paired-grid">
+                    <div className="field">
+                      <label>Facebook Primary Text EN</label>
+                      <textarea
+                        rows={5}
+                        value={editableResult.facebook.primary_text.en}
+                        onChange={(event) => updateLocalizedField("facebook", "primary_text", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Facebook Primary Text CN</label>
+                      <textarea
+                        rows={5}
+                        value={editableResult.facebook.primary_text.cn}
+                        onChange={(event) => updateLocalizedField("facebook", "primary_text", "cn", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Facebook Headline EN</label>
+                      <input
+                        value={editableResult.facebook.headline.en}
+                        onChange={(event) => updateLocalizedField("facebook", "headline", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Facebook Headline CN</label>
+                      <input
+                        value={editableResult.facebook.headline.cn}
+                        onChange={(event) => updateLocalizedField("facebook", "headline", "cn", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Facebook Description EN</label>
+                      <input
+                        value={editableResult.facebook.description.en}
+                        onChange={(event) => updateLocalizedField("facebook", "description", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>Facebook Description CN</label>
+                      <input
+                        value={editableResult.facebook.description.cn}
+                        onChange={(event) => updateLocalizedField("facebook", "description", "cn", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>CTA Suggestion EN</label>
+                      <input
+                        value={editableResult.facebook.cta_suggestion.en}
+                        onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "en", event.target.value)}
+                      />
+                    </div>
+                    <div className="field">
+                      <label>CTA Suggestion CN</label>
+                      <input
+                        value={editableResult.facebook.cta_suggestion.cn}
+                        onChange={(event) => updateLocalizedField("facebook", "cta_suggestion", "cn", event.target.value)}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <div className="button-row">
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    disabled={isPending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        try {
+                          const response = await fetch(`/api/marketing-copy/${activeVersion.version.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ finalResult: editableResult }),
+                          });
+                          const data = (await response.json()) as { item?: MarketingCopyVersionDetail; error?: string };
+                          if (!response.ok) {
+                            throw new Error(data.error ?? "保存最终文案失败。");
+                          }
+                          const item = data.item ?? null;
+                          setActiveVersion(item);
+                          setEditableResult(getEditableResult(item));
+                          await refreshVersionsForCurrentCombo();
+                        } catch (saveError) {
+                          setError(saveError instanceof Error ? saveError.message : "保存最终文案失败。");
                         }
-                        const item = data.item ?? null;
-                        setActiveVersion(item);
-                        setEditableResult(getEditableResult(item));
-                        await refreshVersionsForCurrentCombo();
-                      } catch (saveError) {
-                        setError(saveError instanceof Error ? saveError.message : "保存最终文案失败。");
-                      }
-                    })
-                  }
-                >
-                  保存 Final
-                </button>
-                <button
-                  type="button"
-                  className="primary-button"
-                  disabled={isPending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      try {
-                        const saveResponse = await fetch(`/api/marketing-copy/${activeVersion.version.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ finalResult: editableResult }),
-                        });
-                        const saveData = (await saveResponse.json()) as {
-                          item?: MarketingCopyVersionDetail;
-                          error?: string;
-                        };
+                      })
+                    }
+                  >
+                    保存 Final
+                  </button>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    disabled={isPending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        try {
+                          const saveResponse = await fetch(`/api/marketing-copy/${activeVersion.version.id}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ finalResult: editableResult }),
+                          });
+                          const saveData = (await saveResponse.json()) as {
+                            item?: MarketingCopyVersionDetail;
+                            error?: string;
+                          };
 
-                        if (!saveResponse.ok) {
-                          throw new Error(saveData.error ?? "保存最终文案失败。");
+                          if (!saveResponse.ok) {
+                            throw new Error(saveData.error ?? "保存最终文案失败。");
+                          }
+
+                          const confirmResponse = await fetch(`/api/marketing-copy/${activeVersion.version.id}/confirm`, {
+                            method: "POST",
+                          });
+                          const confirmData = (await confirmResponse.json()) as {
+                            item?: MarketingCopyVersionDetail;
+                            error?: string;
+                          };
+
+                          if (!confirmResponse.ok) {
+                            throw new Error(confirmData.error ?? "确认文案版本失败。");
+                          }
+
+                          const item = confirmData.item ?? null;
+                          setActiveVersion(item);
+                          setEditableResult(getEditableResult(item));
+                          await refreshVersionsForCurrentCombo();
+                        } catch (confirmError) {
+                          setError(confirmError instanceof Error ? confirmError.message : "确认文案版本失败。");
                         }
-
-                        const confirmResponse = await fetch(`/api/marketing-copy/${activeVersion.version.id}/confirm`, {
-                          method: "POST",
-                        });
-                        const confirmData = (await confirmResponse.json()) as {
-                          item?: MarketingCopyVersionDetail;
-                          error?: string;
-                        };
-
-                        if (!confirmResponse.ok) {
-                          throw new Error(confirmData.error ?? "确认文案版本失败。");
-                        }
-
-                        const item = confirmData.item ?? null;
-                        setActiveVersion(item);
-                        setEditableResult(getEditableResult(item));
-                        await refreshVersionsForCurrentCombo();
-                      } catch (confirmError) {
-                        setError(confirmError instanceof Error ? confirmError.message : "确认文案版本失败。");
-                      }
-                    })
-                  }
-                >
-                  Confirm Version
-                </button>
-              </div>
+                      })
+                    }
+                  >
+                    Confirm Version
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="empty-state">先生成一版文案，或从上面的历史版本里选择一版进行查看和编辑。</div>
